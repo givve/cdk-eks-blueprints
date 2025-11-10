@@ -1,0 +1,102 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.applyYamlFromDir = applyYamlFromDir;
+exports.readYamlDocument = readYamlDocument;
+exports.loadMultiResourceYaml = loadMultiResourceYaml;
+exports.loadYaml = loadYaml;
+exports.loadExternalYaml = loadExternalYaml;
+exports.serializeYaml = serializeYaml;
+exports.convertKeyPair = convertKeyPair;
+const fs = require("fs");
+const yaml = require("js-yaml");
+/**
+ * Applies all manifests from a directory. Note: The manifests are not checked,
+ * so user must ensure the manifests have the correct namespaces.
+ * @param dir
+ * @param cluster
+ * @param namespaceManifest
+ */
+function applyYamlFromDir(dir, cluster, namespaceManifest) {
+    fs.readdirSync(dir, { encoding: 'utf8' }).forEach((file, index) => {
+        if (file.split('.').pop() == 'yaml') {
+            const data = fs.readFileSync(dir + file, 'utf8');
+            if (data != undefined) {
+                yaml.loadAll(data, function (item) {
+                    const resources = cluster.addManifest(file.substring(0, file.length - 5) + index, item);
+                    resources.node.addDependency(namespaceManifest);
+                });
+            }
+        }
+    });
+}
+/**
+ * Reads the YAML document from a local path.
+ * @param path YAML document path
+ * @returns YAML document string
+ */
+function readYamlDocument(path) {
+    try {
+        const doc = fs.readFileSync(path, 'utf8');
+        return doc;
+    }
+    catch (e) {
+        console.log(e + ' for path: ' + path);
+        throw e;
+    }
+}
+/**
+ * Reads the YAML document from a local path and parses them as
+ * multiple YAML documents separated by `---` as expected in a Kubernetes manifest file
+ * @param path YAML document path
+ * @returns a list of parsed YAML documents
+ */
+function loadMultiResourceYaml(path) {
+    const doc = readYamlDocument(path);
+    return doc.split("---").map((e) => loadYaml(e));
+}
+/**
+ * Parses the sting document into a single YAML document
+ * @param document document
+ * @returns yaml document
+ */
+function loadYaml(document) {
+    return yaml.load(document);
+}
+/**
+ * Reads the YAML document from a URL and parses
+ * multiple YAML documents separated by `---` as expected in a Kubernetes manifest file Note: The file from the URL is
+ * not validated, so user must ensure the URL contains a valid manifest.
+ * @param url YAML document URL
+ * @returns a list of parsed YAML documents
+ */
+function loadExternalYaml(url) {
+    const request = require('sync-request'); // moved away from import as it is causing open handles that prevents jest from completion
+    const response = request('GET', url);
+    return yaml.loadAll(response.getBody().toString());
+}
+/**
+ * Serializes object as a YAML document
+ * @param document document
+ * @returns yaml document
+ */
+function serializeYaml(document) {
+    return yaml.dump(document);
+}
+/**
+ * Helper function to convert a key-pair values (with an operator)
+ * of spec configurations to appropriate json format for addManifest function
+ * @param reqs
+ * @returns newReqs
+ * */
+function convertKeyPair(reqs) {
+    const newReqs = [];
+    for (let req of reqs) {
+        const key = req["key"];
+        const op = req["operator"];
+        const val = req["values"];
+        const requirement = { key: key, operator: op, values: val };
+        newReqs.push(requirement);
+    }
+    return newReqs;
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoieWFtbC11dGlscy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL2xpYi91dGlscy95YW1sLXV0aWxzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBYUEsNENBWUM7QUFPRCw0Q0FRQztBQVFELHNEQUdDO0FBT0QsNEJBRUM7QUFTRCw0Q0FJQztBQU9ELHNDQUdDO0FBT0Qsd0NBVUM7QUFsR0QseUJBQXlCO0FBQ3pCLGdDQUFnQztBQUdoQzs7Ozs7O0dBTUc7QUFDSCxTQUFnQixnQkFBZ0IsQ0FBQyxHQUFXLEVBQUUsT0FBcUIsRUFBRSxpQkFBcUM7SUFDdEcsRUFBRSxDQUFDLFdBQVcsQ0FBQyxHQUFHLEVBQUUsRUFBRSxRQUFRLEVBQUUsTUFBTSxFQUFFLENBQUMsQ0FBQyxPQUFPLENBQUMsQ0FBQyxJQUFJLEVBQUUsS0FBSyxFQUFFLEVBQUU7UUFDOUQsSUFBSSxJQUFJLENBQUMsS0FBSyxDQUFDLEdBQUcsQ0FBQyxDQUFDLEdBQUcsRUFBRSxJQUFJLE1BQU0sRUFBRSxDQUFDO1lBQ2xDLE1BQU0sSUFBSSxHQUFHLEVBQUUsQ0FBQyxZQUFZLENBQUMsR0FBRyxHQUFHLElBQUksRUFBRSxNQUFNLENBQUMsQ0FBQztZQUNqRCxJQUFJLElBQUksSUFBSSxTQUFTLEVBQUUsQ0FBQztnQkFDcEIsSUFBSSxDQUFDLE9BQU8sQ0FBQyxJQUFJLEVBQUUsVUFBVSxJQUFJO29CQUM3QixNQUFNLFNBQVMsR0FBRyxPQUFPLENBQUMsV0FBVyxDQUFDLElBQUksQ0FBQyxTQUFTLENBQUMsQ0FBQyxFQUFFLElBQUksQ0FBQyxNQUFNLEdBQUcsQ0FBQyxDQUFDLEdBQUcsS0FBSyxFQUF5QixJQUFJLENBQUMsQ0FBQztvQkFDL0csU0FBUyxDQUFDLElBQUksQ0FBQyxhQUFhLENBQUMsaUJBQWlCLENBQUMsQ0FBQztnQkFDcEQsQ0FBQyxDQUFDLENBQUM7WUFDUCxDQUFDO1FBQ0wsQ0FBQztJQUNMLENBQUMsQ0FBQyxDQUFDO0FBQ1AsQ0FBQztBQUVEOzs7O0dBSUc7QUFDSCxTQUFnQixnQkFBZ0IsQ0FBQyxJQUFZO0lBQ3pDLElBQUksQ0FBQztRQUNELE1BQU0sR0FBRyxHQUFHLEVBQUUsQ0FBQyxZQUFZLENBQUMsSUFBSSxFQUFFLE1BQU0sQ0FBQyxDQUFDO1FBQzFDLE9BQU8sR0FBRyxDQUFDO0lBQ2YsQ0FBQztJQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUM7UUFDVCxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsR0FBRyxhQUFhLEdBQUcsSUFBSSxDQUFDLENBQUM7UUFDdEMsTUFBTSxDQUFDLENBQUM7SUFDWixDQUFDO0FBQ0wsQ0FBQztBQUVEOzs7OztHQUtHO0FBQ0gsU0FBZ0IscUJBQXFCLENBQUMsSUFBWTtJQUM5QyxNQUFNLEdBQUcsR0FBRyxnQkFBZ0IsQ0FBQyxJQUFJLENBQUMsQ0FBQztJQUNuQyxPQUFPLEdBQUcsQ0FBQyxLQUFLLENBQUMsS0FBSyxDQUFDLENBQUMsR0FBRyxDQUFDLENBQUMsQ0FBTSxFQUFFLEVBQUUsQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDLENBQUMsQ0FBQztBQUN6RCxDQUFDO0FBRUQ7Ozs7R0FJRztBQUNILFNBQWdCLFFBQVEsQ0FBQyxRQUFnQjtJQUNyQyxPQUFPLElBQUksQ0FBQyxJQUFJLENBQUMsUUFBUSxDQUFDLENBQUM7QUFDL0IsQ0FBQztBQUVEOzs7Ozs7R0FNRztBQUNILFNBQWdCLGdCQUFnQixDQUFDLEdBQVc7SUFDeEMsTUFBTSxPQUFPLEdBQUcsT0FBTyxDQUFDLGNBQWMsQ0FBQyxDQUFDLENBQUMsMEZBQTBGO0lBQ25JLE1BQU0sUUFBUSxHQUFHLE9BQU8sQ0FBQyxLQUFLLEVBQUUsR0FBRyxDQUFDLENBQUM7SUFDckMsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLFFBQVEsQ0FBQyxPQUFPLEVBQUUsQ0FBQyxRQUFRLEVBQUUsQ0FBQyxDQUFDO0FBQ3ZELENBQUM7QUFFRDs7OztHQUlHO0FBQ0gsU0FBZ0IsYUFBYSxDQUFDLFFBQWE7SUFDdkMsT0FBTyxJQUFJLENBQUMsSUFBSSxDQUFDLFFBQVEsQ0FBQyxDQUFDO0FBRS9CLENBQUM7QUFDRDs7Ozs7S0FLSztBQUNMLFNBQWdCLGNBQWMsQ0FBQyxJQUEyRDtJQUN0RixNQUFNLE9BQU8sR0FBRyxFQUFFLENBQUM7SUFDbkIsS0FBSyxJQUFJLEdBQUcsSUFBSSxJQUFJLEVBQUUsQ0FBQztRQUNuQixNQUFNLEdBQUcsR0FBRyxHQUFHLENBQUMsS0FBSyxDQUFDLENBQUM7UUFDdkIsTUFBTSxFQUFFLEdBQUcsR0FBRyxDQUFDLFVBQVUsQ0FBQyxDQUFDO1FBQzNCLE1BQU0sR0FBRyxHQUFHLEdBQUcsQ0FBQyxRQUFRLENBQUMsQ0FBQztRQUMxQixNQUFNLFdBQVcsR0FBRyxFQUFFLEdBQUcsRUFBRSxHQUFHLEVBQUUsUUFBUSxFQUFFLEVBQUUsRUFBRSxNQUFNLEVBQUUsR0FBRyxFQUFFLENBQUM7UUFDNUQsT0FBTyxDQUFDLElBQUksQ0FBQyxXQUFXLENBQUMsQ0FBQztJQUM5QixDQUFDO0lBQ0QsT0FBTyxPQUFPLENBQUM7QUFDbkIsQ0FBQyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIGVrcyBmcm9tICdhd3MtY2RrLWxpYi9hd3MtZWtzJztcclxuaW1wb3J0IHsgS3ViZXJuZXRlc01hbmlmZXN0IH0gZnJvbSAnYXdzLWNkay1saWIvYXdzLWVrcyc7XHJcbmltcG9ydCAqIGFzIGZzIGZyb20gJ2ZzJztcclxuaW1wb3J0ICogYXMgeWFtbCBmcm9tICdqcy15YW1sJztcclxuXHJcblxyXG4vKipcclxuICogQXBwbGllcyBhbGwgbWFuaWZlc3RzIGZyb20gYSBkaXJlY3RvcnkuIE5vdGU6IFRoZSBtYW5pZmVzdHMgYXJlIG5vdCBjaGVja2VkLCBcclxuICogc28gdXNlciBtdXN0IGVuc3VyZSB0aGUgbWFuaWZlc3RzIGhhdmUgdGhlIGNvcnJlY3QgbmFtZXNwYWNlcy4gXHJcbiAqIEBwYXJhbSBkaXIgXHJcbiAqIEBwYXJhbSBjbHVzdGVyIFxyXG4gKiBAcGFyYW0gbmFtZXNwYWNlTWFuaWZlc3QgXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gYXBwbHlZYW1sRnJvbURpcihkaXI6IHN0cmluZywgY2x1c3RlcjogZWtzLklDbHVzdGVyLCBuYW1lc3BhY2VNYW5pZmVzdDogS3ViZXJuZXRlc01hbmlmZXN0KTogdm9pZCB7XHJcbiAgICBmcy5yZWFkZGlyU3luYyhkaXIsIHsgZW5jb2Rpbmc6ICd1dGY4JyB9KS5mb3JFYWNoKChmaWxlLCBpbmRleCkgPT4ge1xyXG4gICAgICAgIGlmIChmaWxlLnNwbGl0KCcuJykucG9wKCkgPT0gJ3lhbWwnKSB7XHJcbiAgICAgICAgICAgIGNvbnN0IGRhdGEgPSBmcy5yZWFkRmlsZVN5bmMoZGlyICsgZmlsZSwgJ3V0ZjgnKTtcclxuICAgICAgICAgICAgaWYgKGRhdGEgIT0gdW5kZWZpbmVkKSB7ICBcclxuICAgICAgICAgICAgICAgIHlhbWwubG9hZEFsbChkYXRhLCBmdW5jdGlvbiAoaXRlbSkge1xyXG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IHJlc291cmNlcyA9IGNsdXN0ZXIuYWRkTWFuaWZlc3QoZmlsZS5zdWJzdHJpbmcoMCwgZmlsZS5sZW5ndGggLSA1KSArIGluZGV4LCA8UmVjb3JkPHN0cmluZywgYW55PltdPml0ZW0pO1xyXG4gICAgICAgICAgICAgICAgICAgIHJlc291cmNlcy5ub2RlLmFkZERlcGVuZGVuY3kobmFtZXNwYWNlTWFuaWZlc3QpO1xyXG4gICAgICAgICAgICAgICAgfSk7XHJcbiAgICAgICAgICAgIH1cclxuICAgICAgICB9XHJcbiAgICB9KTtcclxufVxyXG5cclxuLyoqXHJcbiAqIFJlYWRzIHRoZSBZQU1MIGRvY3VtZW50IGZyb20gYSBsb2NhbCBwYXRoLiBcclxuICogQHBhcmFtIHBhdGggWUFNTCBkb2N1bWVudCBwYXRoXHJcbiAqIEByZXR1cm5zIFlBTUwgZG9jdW1lbnQgc3RyaW5nXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gcmVhZFlhbWxEb2N1bWVudChwYXRoOiBzdHJpbmcpOiBzdHJpbmcge1xyXG4gICAgdHJ5IHtcclxuICAgICAgICBjb25zdCBkb2MgPSBmcy5yZWFkRmlsZVN5bmMocGF0aCwgJ3V0ZjgnKTtcclxuICAgICAgICByZXR1cm4gZG9jO1xyXG4gICAgfSBjYXRjaCAoZSkge1xyXG4gICAgICAgIGNvbnNvbGUubG9nKGUgKyAnIGZvciBwYXRoOiAnICsgcGF0aCk7XHJcbiAgICAgICAgdGhyb3cgZTtcclxuICAgIH1cclxufVxyXG5cclxuLyoqXHJcbiAqIFJlYWRzIHRoZSBZQU1MIGRvY3VtZW50IGZyb20gYSBsb2NhbCBwYXRoIGFuZCBwYXJzZXMgdGhlbSBhcyBcclxuICogbXVsdGlwbGUgWUFNTCBkb2N1bWVudHMgc2VwYXJhdGVkIGJ5IGAtLS1gIGFzIGV4cGVjdGVkIGluIGEgS3ViZXJuZXRlcyBtYW5pZmVzdCBmaWxlXHJcbiAqIEBwYXJhbSBwYXRoIFlBTUwgZG9jdW1lbnQgcGF0aFxyXG4gKiBAcmV0dXJucyBhIGxpc3Qgb2YgcGFyc2VkIFlBTUwgZG9jdW1lbnRzXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gbG9hZE11bHRpUmVzb3VyY2VZYW1sKHBhdGg6IHN0cmluZyk6IGFueSB7XHJcbiAgICBjb25zdCBkb2MgPSByZWFkWWFtbERvY3VtZW50KHBhdGgpO1xyXG4gICAgcmV0dXJuIGRvYy5zcGxpdChcIi0tLVwiKS5tYXAoKGU6IGFueSkgPT4gbG9hZFlhbWwoZSkpO1xyXG59XHJcblxyXG4vKipcclxuICogUGFyc2VzIHRoZSBzdGluZyBkb2N1bWVudCBpbnRvIGEgc2luZ2xlIFlBTUwgZG9jdW1lbnRcclxuICogQHBhcmFtIGRvY3VtZW50IGRvY3VtZW50IFxyXG4gKiBAcmV0dXJucyB5YW1sIGRvY3VtZW50XHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gbG9hZFlhbWwoZG9jdW1lbnQ6IHN0cmluZyk6IGFueSB7XHJcbiAgICByZXR1cm4geWFtbC5sb2FkKGRvY3VtZW50KTtcclxufVxyXG5cclxuLyoqXHJcbiAqIFJlYWRzIHRoZSBZQU1MIGRvY3VtZW50IGZyb20gYSBVUkwgYW5kIHBhcnNlcyBcclxuICogbXVsdGlwbGUgWUFNTCBkb2N1bWVudHMgc2VwYXJhdGVkIGJ5IGAtLS1gIGFzIGV4cGVjdGVkIGluIGEgS3ViZXJuZXRlcyBtYW5pZmVzdCBmaWxlIE5vdGU6IFRoZSBmaWxlIGZyb20gdGhlIFVSTCBpc1xyXG4gKiBub3QgdmFsaWRhdGVkLCBzbyB1c2VyIG11c3QgZW5zdXJlIHRoZSBVUkwgY29udGFpbnMgYSB2YWxpZCBtYW5pZmVzdC5cclxuICogQHBhcmFtIHVybCBZQU1MIGRvY3VtZW50IFVSTFxyXG4gKiBAcmV0dXJucyBhIGxpc3Qgb2YgcGFyc2VkIFlBTUwgZG9jdW1lbnRzXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gbG9hZEV4dGVybmFsWWFtbCh1cmw6IHN0cmluZyk6IGFueSB7XHJcbiAgICBjb25zdCByZXF1ZXN0ID0gcmVxdWlyZSgnc3luYy1yZXF1ZXN0Jyk7IC8vIG1vdmVkIGF3YXkgZnJvbSBpbXBvcnQgYXMgaXQgaXMgY2F1c2luZyBvcGVuIGhhbmRsZXMgdGhhdCBwcmV2ZW50cyBqZXN0IGZyb20gY29tcGxldGlvblxyXG4gICAgY29uc3QgcmVzcG9uc2UgPSByZXF1ZXN0KCdHRVQnLCB1cmwpO1xyXG4gICAgcmV0dXJuIHlhbWwubG9hZEFsbChyZXNwb25zZS5nZXRCb2R5KCkudG9TdHJpbmcoKSk7XHJcbn1cclxuXHJcbi8qKlxyXG4gKiBTZXJpYWxpemVzIG9iamVjdCBhcyBhIFlBTUwgZG9jdW1lbnRcclxuICogQHBhcmFtIGRvY3VtZW50IGRvY3VtZW50IFxyXG4gKiBAcmV0dXJucyB5YW1sIGRvY3VtZW50XHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gc2VyaWFsaXplWWFtbChkb2N1bWVudDogYW55KTogc3RyaW5nIHtcclxuICAgIHJldHVybiB5YW1sLmR1bXAoZG9jdW1lbnQpO1xyXG5cclxufVxyXG4vKipcclxuICogSGVscGVyIGZ1bmN0aW9uIHRvIGNvbnZlcnQgYSBrZXktcGFpciB2YWx1ZXMgKHdpdGggYW4gb3BlcmF0b3IpXHJcbiAqIG9mIHNwZWMgY29uZmlndXJhdGlvbnMgdG8gYXBwcm9wcmlhdGUganNvbiBmb3JtYXQgZm9yIGFkZE1hbmlmZXN0IGZ1bmN0aW9uXHJcbiAqIEBwYXJhbSByZXFzXHJcbiAqIEByZXR1cm5zIG5ld1JlcXNcclxuICogKi9cclxuZXhwb3J0IGZ1bmN0aW9uIGNvbnZlcnRLZXlQYWlyKHJlcXM6IHsga2V5OiBzdHJpbmc7IG9wZXJhdG9yOiBzdHJpbmc7IHZhbHVlczogc3RyaW5nW10gfVtdKTogYW55W10ge1xyXG4gICAgY29uc3QgbmV3UmVxcyA9IFtdO1xyXG4gICAgZm9yIChsZXQgcmVxIG9mIHJlcXMpIHtcclxuICAgICAgICBjb25zdCBrZXkgPSByZXFbXCJrZXlcIl07XHJcbiAgICAgICAgY29uc3Qgb3AgPSByZXFbXCJvcGVyYXRvclwiXTtcclxuICAgICAgICBjb25zdCB2YWwgPSByZXFbXCJ2YWx1ZXNcIl07XHJcbiAgICAgICAgY29uc3QgcmVxdWlyZW1lbnQgPSB7IGtleToga2V5LCBvcGVyYXRvcjogb3AsIHZhbHVlczogdmFsIH07XHJcbiAgICAgICAgbmV3UmVxcy5wdXNoKHJlcXVpcmVtZW50KTtcclxuICAgIH1cclxuICAgIHJldHVybiBuZXdSZXFzO1xyXG59XHJcbiJdfQ==

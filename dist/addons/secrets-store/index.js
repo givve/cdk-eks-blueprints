@@ -1,0 +1,40 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SecretsStoreAddOn = void 0;
+const csi_driver_provider_aws_1 = require("./csi-driver-provider-aws");
+const utils_1 = require("../../utils");
+/**
+ * Defaults options for the add-on
+ */
+const defaultProps = {
+    ascpUrl: 'https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/secrets-store-csi-driver-provider-aws-0.3.11/deployment/aws-provider-installer.yaml',
+    chart: 'secrets-store-csi-driver',
+    name: 'secrets-store-csi-driver',
+    namespace: 'kube-system',
+    version: '1.5.3',
+    release: 'blueprints-addon-secret-store-csi-driver',
+    repository: 'https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts',
+    rotationPollInterval: undefined,
+    syncSecrets: true,
+};
+let SecretsStoreAddOn = class SecretsStoreAddOn {
+    options;
+    constructor(props) {
+        this.options = (0, utils_1.cloneDeep)({ ...defaultProps, ...props });
+    }
+    deploy(clusterInfo) {
+        const csiDriverProviderAws = new csi_driver_provider_aws_1.CsiDriverProviderAws(this.options);
+        return Promise.resolve(csiDriverProviderAws.deploy(clusterInfo));
+    }
+};
+exports.SecretsStoreAddOn = SecretsStoreAddOn;
+exports.SecretsStoreAddOn = SecretsStoreAddOn = __decorate([
+    utils_1.supportsALL
+], SecretsStoreAddOn);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9saWIvYWRkb25zL3NlY3JldHMtc3RvcmUvaW5kZXgudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7O0FBR0EsdUVBQWlFO0FBQ2pFLHVDQUFxRDtBQW9DckQ7O0dBRUc7QUFDSCxNQUFNLFlBQVksR0FBMkI7SUFDekMsT0FBTyxFQUFFLGlLQUFpSztJQUMxSyxLQUFLLEVBQUUsMEJBQTBCO0lBQ2pDLElBQUksRUFBRSwwQkFBMEI7SUFDaEMsU0FBUyxFQUFFLGFBQWE7SUFDeEIsT0FBTyxFQUFFLE9BQU87SUFDaEIsT0FBTyxFQUFFLDBDQUEwQztJQUNuRCxVQUFVLEVBQUUsbUVBQW1FO0lBQy9FLG9CQUFvQixFQUFFLFNBQVM7SUFDL0IsV0FBVyxFQUFFLElBQUk7Q0FDcEIsQ0FBQztBQUdLLElBQU0saUJBQWlCLEdBQXZCLE1BQU0saUJBQWlCO0lBRWxCLE9BQU8sQ0FBeUI7SUFFeEMsWUFBWSxLQUE4QjtRQUN0QyxJQUFJLENBQUMsT0FBTyxHQUFHLElBQUEsaUJBQVMsRUFBQyxFQUFFLEdBQUcsWUFBWSxFQUFFLEdBQUcsS0FBSyxFQUFFLENBQUMsQ0FBQztJQUM1RCxDQUFDO0lBRUQsTUFBTSxDQUFDLFdBQXdCO1FBQzNCLE1BQU0sb0JBQW9CLEdBQUcsSUFBSSw4Q0FBb0IsQ0FBQyxJQUFJLENBQUMsT0FBTyxDQUFDLENBQUM7UUFDcEUsT0FBTyxPQUFPLENBQUMsT0FBTyxDQUFDLG9CQUFvQixDQUFDLE1BQU0sQ0FBQyxXQUFXLENBQUMsQ0FBQyxDQUFDO0lBQ3JFLENBQUM7Q0FDSixDQUFBO0FBWlksOENBQWlCOzRCQUFqQixpQkFBaUI7SUFEN0IsbUJBQVc7R0FDQyxpQkFBaUIsQ0FZN0IiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBDb25zdHJ1Y3QgfSBmcm9tIFwiY29uc3RydWN0c1wiO1xyXG5pbXBvcnQgeyBDbHVzdGVyQWRkT24sIENsdXN0ZXJJbmZvIH0gZnJvbSAnLi4vLi4vc3BpJztcclxuaW1wb3J0IHsgSGVsbUFkZE9uVXNlclByb3BzIH0gZnJvbSAnLi4vaGVsbS1hZGRvbic7XHJcbmltcG9ydCB7IENzaURyaXZlclByb3ZpZGVyQXdzIH0gZnJvbSAnLi9jc2ktZHJpdmVyLXByb3ZpZGVyLWF3cyc7XHJcbmltcG9ydCB7IGNsb25lRGVlcCwgc3VwcG9ydHNBTEwgfSBmcm9tIFwiLi4vLi4vdXRpbHNcIjtcclxuXHJcbi8qKlxyXG4gKiBDb25maWd1cmF0aW9uIG9wdGlvbnMgZm9yIFNlY3JldHMgU3RvcmUgQWRkT25cclxuICovXHJcbmV4cG9ydCBpbnRlcmZhY2UgU2VjcmV0c1N0b3JlQWRkT25Qcm9wcyBleHRlbmRzIEhlbG1BZGRPblVzZXJQcm9wcyB7XHJcbiAgICAvKipcclxuICAgICAqIE5hbWVzcGFjZSB3aGVyZSBTZWNyZXRzIFN0b3JlIENTSSBkcml2ZXIgd2lsbCBiZSBpbnN0YWxsZWRcclxuICAgICAqIEBkZWZhdWx0ICdrdWJlLXN5c3RlbSdcclxuICAgICAqL1xyXG4gICAgcmVhZG9ubHkgbmFtZXNwYWNlPzogc3RyaW5nO1xyXG5cclxuICAgIC8qKlxyXG4gICAgICogVmVyc2lvbiBvZiB0aGUgU2VjcmV0cyBTdG9yZSBDU0kgRHJpdmVyLiBFZy4gdjAuMC4yM1xyXG4gICAgICogQGRlZmF1bHQgJ3YwLjAuMjMvJ1xyXG4gICAgICovXHJcbiAgICByZWFkb25seSB2ZXJzaW9uPzogc3RyaW5nO1xyXG5cclxuICAgIC8qKlxyXG4gICAgICogUm90YXRpb24gUG9sbCBJbnRlcnZhbCwgZS5nLiAnMTIwcycuXHJcbiAgICAgKiBAZGVmYXVsdCB1bmRlZmluZWRcclxuICAgICAqIElmIHByb3ZpZGVkLCBzZXRzIGF1dG8gcm90YXRpb24gdG8gdHJ1ZSBhbmQgc2V0cyB0aGUgcG9sbGluZyBpbnRlcnZhbC5cclxuICAgICAqL1xyXG4gICAgcmVhZG9ubHkgcm90YXRpb25Qb2xsSW50ZXJ2YWw/OiBzdHJpbmc7XHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBFbmFibGUgU3luYyBTZWNyZXRzIHRvIGt1YmVybmV0ZXMgc2VjcmV0c1xyXG4gICAgICovXHJcbiAgICByZWFkb25seSBzeW5jU2VjcmV0cz86IGJvb2xlYW47XHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBBU0NQIHNlY3JldCBhbmQgY29uZmlndXJhdGlvbiBwcm92aWRlciBVUkwgZm9yIHByb3Zpc2lvbmluZy5cclxuICAgICAqL1xyXG4gICAgcmVhZG9ubHkgYXNjcFVybD86IHN0cmluZ1xyXG59XHJcblxyXG4vKipcclxuICogRGVmYXVsdHMgb3B0aW9ucyBmb3IgdGhlIGFkZC1vblxyXG4gKi9cclxuY29uc3QgZGVmYXVsdFByb3BzOiBTZWNyZXRzU3RvcmVBZGRPblByb3BzID0ge1xyXG4gICAgYXNjcFVybDogJ2h0dHBzOi8vcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbS9hd3Mvc2VjcmV0cy1zdG9yZS1jc2ktZHJpdmVyLXByb3ZpZGVyLWF3cy9zZWNyZXRzLXN0b3JlLWNzaS1kcml2ZXItcHJvdmlkZXItYXdzLTAuMy4xMS9kZXBsb3ltZW50L2F3cy1wcm92aWRlci1pbnN0YWxsZXIueWFtbCcsXHJcbiAgICBjaGFydDogJ3NlY3JldHMtc3RvcmUtY3NpLWRyaXZlcicsXHJcbiAgICBuYW1lOiAnc2VjcmV0cy1zdG9yZS1jc2ktZHJpdmVyJyxcclxuICAgIG5hbWVzcGFjZTogJ2t1YmUtc3lzdGVtJyxcclxuICAgIHZlcnNpb246ICcxLjUuMycsXHJcbiAgICByZWxlYXNlOiAnYmx1ZXByaW50cy1hZGRvbi1zZWNyZXQtc3RvcmUtY3NpLWRyaXZlcicsXHJcbiAgICByZXBvc2l0b3J5OiAnaHR0cHM6Ly9rdWJlcm5ldGVzLXNpZ3MuZ2l0aHViLmlvL3NlY3JldHMtc3RvcmUtY3NpLWRyaXZlci9jaGFydHMnLFxyXG4gICAgcm90YXRpb25Qb2xsSW50ZXJ2YWw6IHVuZGVmaW5lZCxcclxuICAgIHN5bmNTZWNyZXRzOiB0cnVlLFxyXG59O1xyXG5cclxuQHN1cHBvcnRzQUxMXHJcbmV4cG9ydCBjbGFzcyBTZWNyZXRzU3RvcmVBZGRPbiBpbXBsZW1lbnRzIENsdXN0ZXJBZGRPbiB7XHJcblxyXG4gICAgcHJpdmF0ZSBvcHRpb25zOiBTZWNyZXRzU3RvcmVBZGRPblByb3BzO1xyXG5cclxuICAgIGNvbnN0cnVjdG9yKHByb3BzPzogU2VjcmV0c1N0b3JlQWRkT25Qcm9wcykge1xyXG4gICAgICAgIHRoaXMub3B0aW9ucyA9IGNsb25lRGVlcCh7IC4uLmRlZmF1bHRQcm9wcywgLi4ucHJvcHMgfSk7XHJcbiAgICB9XHJcblxyXG4gICAgZGVwbG95KGNsdXN0ZXJJbmZvOiBDbHVzdGVySW5mbyk6IFByb21pc2U8Q29uc3RydWN0PiB7XHJcbiAgICAgICAgY29uc3QgY3NpRHJpdmVyUHJvdmlkZXJBd3MgPSBuZXcgQ3NpRHJpdmVyUHJvdmlkZXJBd3ModGhpcy5vcHRpb25zKTtcclxuICAgICAgICByZXR1cm4gUHJvbWlzZS5yZXNvbHZlKGNzaURyaXZlclByb3ZpZGVyQXdzLmRlcGxveShjbHVzdGVySW5mbykpO1xyXG4gICAgfVxyXG59XHJcbiJdfQ==

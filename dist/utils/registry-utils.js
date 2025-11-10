@@ -1,0 +1,32 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.registries = void 0;
+exports.registries = new Map([
+    ["af-south-1", "877085696533.dkr.ecr.af-south-1.amazonaws.com/"],
+    ["ap-east-1", "800184023465.dkr.ecr.ap-east-1.amazonaws.com/"],
+    ["ap-northeast-1", "602401143452.dkr.ecr.ap-northeast-1.amazonaws.com/"],
+    ["ap-northeast-2", "602401143452.dkr.ecr.ap-northeast-2.amazonaws.com/"],
+    ["ap-northeast-3", "602401143452.dkr.ecr.ap-northeast-3.amazonaws.com/"],
+    ["ap-south-1", "602401143452.dkr.ecr.ap-south-1.amazonaws.com/"],
+    ["ap-southeast-1", "602401143452.dkr.ecr.ap-southeast-1.amazonaws.com/"],
+    ["ap-southeast-2", "602401143452.dkr.ecr.ap-southeast-2.amazonaws.com/"],
+    ["ap-southeast-3", "296578399912.dkr.ecr.ap-southeast-3.amazonaws.com/"],
+    ["ca-central-1", "602401143452.dkr.ecr.ca-central-1.amazonaws.com/"],
+    ["cn-north-1", "918309763551.dkr.ecr.cn-north-1.amazonaws.com.cn/"],
+    ["cn-northwest-1", "961992271922.dkr.ecr.cn-northwest-1.amazonaws.com.cn/"],
+    ["eu-central-1", "602401143452.dkr.ecr.eu-central-1.amazonaws.com/"],
+    ["eu-north-1", "602401143452.dkr.ecr.eu-north-1.amazonaws.com/"],
+    ["eu-south-1", "590381155156.dkr.ecr.eu-south-1.amazonaws.com/"],
+    ["eu-west-1", "602401143452.dkr.ecr.eu-west-1.amazonaws.com/"],
+    ["eu-west-2", "602401143452.dkr.ecr.eu-west-2.amazonaws.com/"],
+    ["eu-west-3", "602401143452.dkr.ecr.eu-west-3.amazonaws.com/"],
+    ["me-south-1", "558608220178.dkr.ecr.me-south-1.amazonaws.com/"],
+    ["sa-east-1", "602401143452.dkr.ecr.sa-east-1.amazonaws.com/"],
+    ["us-east-1", "602401143452.dkr.ecr.us-east-1.amazonaws.com/"],
+    ["us-east-2", "602401143452.dkr.ecr.us-east-2.amazonaws.com/"],
+    ["us-gov-east-1", "151742754352.dkr.ecr.us-gov-east-1.amazonaws.com/"],
+    ["us-gov-west-1", "013241004608.dkr.ecr.us-gov-west-1.amazonaws.com/"],
+    ["us-west-1", "602401143452.dkr.ecr.us-west-1.amazonaws.com/"],
+    ["us-west-2", "602401143452.dkr.ecr.us-west-2.amazonaws.com/"],
+]);
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicmVnaXN0cnktdXRpbHMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvdXRpbHMvcmVnaXN0cnktdXRpbHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQWEsUUFBQSxVQUFVLEdBQUcsSUFBSSxHQUFHLENBQUM7SUFDOUIsQ0FBQyxZQUFZLEVBQUUsZ0RBQWdELENBQUM7SUFDaEUsQ0FBQyxXQUFXLEVBQUUsK0NBQStDLENBQUM7SUFDOUQsQ0FBQyxnQkFBZ0IsRUFBQyxvREFBb0QsQ0FBQztJQUN2RSxDQUFDLGdCQUFnQixFQUFDLG9EQUFvRCxDQUFDO0lBQ3ZFLENBQUMsZ0JBQWdCLEVBQUMsb0RBQW9ELENBQUM7SUFDdkUsQ0FBQyxZQUFZLEVBQUMsZ0RBQWdELENBQUM7SUFDL0QsQ0FBQyxnQkFBZ0IsRUFBQyxvREFBb0QsQ0FBQztJQUN2RSxDQUFDLGdCQUFnQixFQUFDLG9EQUFvRCxDQUFDO0lBQ3ZFLENBQUMsZ0JBQWdCLEVBQUMsb0RBQW9ELENBQUM7SUFDdkUsQ0FBQyxjQUFjLEVBQUMsa0RBQWtELENBQUM7SUFDbkUsQ0FBQyxZQUFZLEVBQUMsbURBQW1ELENBQUM7SUFDbEUsQ0FBQyxnQkFBZ0IsRUFBQyx1REFBdUQsQ0FBQztJQUMxRSxDQUFDLGNBQWMsRUFBQyxrREFBa0QsQ0FBQztJQUNuRSxDQUFDLFlBQVksRUFBQyxnREFBZ0QsQ0FBQztJQUMvRCxDQUFDLFlBQVksRUFBQyxnREFBZ0QsQ0FBQztJQUMvRCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFlBQVksRUFBQyxnREFBZ0QsQ0FBQztJQUMvRCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLGVBQWUsRUFBQyxtREFBbUQsQ0FBQztJQUNyRSxDQUFDLGVBQWUsRUFBQyxtREFBbUQsQ0FBQztJQUNyRSxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztJQUM3RCxDQUFDLFdBQVcsRUFBQywrQ0FBK0MsQ0FBQztDQUNoRSxDQUFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgY29uc3QgcmVnaXN0cmllcyA9IG5ldyBNYXAoW1xyXG4gICAgW1wiYWYtc291dGgtMVwiLCBcIjg3NzA4NTY5NjUzMy5ka3IuZWNyLmFmLXNvdXRoLTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJhcC1lYXN0LTFcIiwgXCI4MDAxODQwMjM0NjUuZGtyLmVjci5hcC1lYXN0LTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJhcC1ub3J0aGVhc3QtMVwiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IuYXAtbm9ydGhlYXN0LTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJhcC1ub3J0aGVhc3QtMlwiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IuYXAtbm9ydGhlYXN0LTIuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJhcC1ub3J0aGVhc3QtM1wiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IuYXAtbm9ydGhlYXN0LTMuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJhcC1zb3V0aC0xXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci5hcC1zb3V0aC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiYXAtc291dGhlYXN0LTFcIixcIjYwMjQwMTE0MzQ1Mi5ka3IuZWNyLmFwLXNvdXRoZWFzdC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiYXAtc291dGhlYXN0LTJcIixcIjYwMjQwMTE0MzQ1Mi5ka3IuZWNyLmFwLXNvdXRoZWFzdC0yLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiYXAtc291dGhlYXN0LTNcIixcIjI5NjU3ODM5OTkxMi5ka3IuZWNyLmFwLXNvdXRoZWFzdC0zLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiY2EtY2VudHJhbC0xXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci5jYS1jZW50cmFsLTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJjbi1ub3J0aC0xXCIsXCI5MTgzMDk3NjM1NTEuZGtyLmVjci5jbi1ub3J0aC0xLmFtYXpvbmF3cy5jb20uY24vXCJdLFxyXG4gICAgW1wiY24tbm9ydGh3ZXN0LTFcIixcIjk2MTk5MjI3MTkyMi5ka3IuZWNyLmNuLW5vcnRod2VzdC0xLmFtYXpvbmF3cy5jb20uY24vXCJdLFxyXG4gICAgW1wiZXUtY2VudHJhbC0xXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci5ldS1jZW50cmFsLTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJldS1ub3J0aC0xXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci5ldS1ub3J0aC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiZXUtc291dGgtMVwiLFwiNTkwMzgxMTU1MTU2LmRrci5lY3IuZXUtc291dGgtMS5hbWF6b25hd3MuY29tL1wiXSxcclxuICAgIFtcImV1LXdlc3QtMVwiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IuZXUtd2VzdC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1wiZXUtd2VzdC0yXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci5ldS13ZXN0LTIuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJldS13ZXN0LTNcIixcIjYwMjQwMTE0MzQ1Mi5ka3IuZWNyLmV1LXdlc3QtMy5hbWF6b25hd3MuY29tL1wiXSxcclxuICAgIFtcIm1lLXNvdXRoLTFcIixcIjU1ODYwODIyMDE3OC5ka3IuZWNyLm1lLXNvdXRoLTEuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJzYS1lYXN0LTFcIixcIjYwMjQwMTE0MzQ1Mi5ka3IuZWNyLnNhLWVhc3QtMS5hbWF6b25hd3MuY29tL1wiXSxcclxuICAgIFtcInVzLWVhc3QtMVwiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IudXMtZWFzdC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1widXMtZWFzdC0yXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci51cy1lYXN0LTIuYW1hem9uYXdzLmNvbS9cIl0sXHJcbiAgICBbXCJ1cy1nb3YtZWFzdC0xXCIsXCIxNTE3NDI3NTQzNTIuZGtyLmVjci51cy1nb3YtZWFzdC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1widXMtZ292LXdlc3QtMVwiLFwiMDEzMjQxMDA0NjA4LmRrci5lY3IudXMtZ292LXdlc3QtMS5hbWF6b25hd3MuY29tL1wiXSxcclxuICAgIFtcInVzLXdlc3QtMVwiLFwiNjAyNDAxMTQzNDUyLmRrci5lY3IudXMtd2VzdC0xLmFtYXpvbmF3cy5jb20vXCJdLFxyXG4gICAgW1widXMtd2VzdC0yXCIsXCI2MDI0MDExNDM0NTIuZGtyLmVjci51cy13ZXN0LTIuYW1hem9uYXdzLmNvbS9cIl0sXHJcbl0pO1xyXG5cclxuIl19

@@ -1,0 +1,48 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CreateCertificateProvider = exports.ImportCertificateProvider = void 0;
+const acm = require("aws-cdk-lib/aws-certificatemanager");
+/**
+ * Certificate provider that imports certificate into the current stack by arn.
+ */
+class ImportCertificateProvider {
+    certificateArn;
+    id;
+    constructor(certificateArn, id) {
+        this.certificateArn = certificateArn;
+        this.id = id;
+    }
+    provide(context) {
+        return acm.Certificate.fromCertificateArn(context.scope, this.id, this.certificateArn);
+    }
+}
+exports.ImportCertificateProvider = ImportCertificateProvider;
+/**
+ * Certificate provider that creates a new certificate.
+ * Expects a hosted zone to be registed for validation.
+ */
+class CreateCertificateProvider {
+    name;
+    domainName;
+    hostedZoneResourceName;
+    /**
+     * Creates the certificate provider.
+     * @param name Name of this resource that other resource providers, add-ons and teams can use for look-up.
+     * @param domainName
+     * @param hostedZoneResourceName
+     */
+    constructor(name, domainName, hostedZoneResourceName) {
+        this.name = name;
+        this.domainName = domainName;
+        this.hostedZoneResourceName = hostedZoneResourceName;
+    }
+    provide(context) {
+        const hostedZone = context.get(this.hostedZoneResourceName);
+        return new acm.Certificate(context.scope, this.name, {
+            domainName: this.domainName,
+            validation: acm.CertificateValidation.fromDns(hostedZone),
+        });
+    }
+}
+exports.CreateCertificateProvider = CreateCertificateProvider;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2VydGlmaWNhdGUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvcmVzb3VyY2UtcHJvdmlkZXJzL2NlcnRpZmljYXRlLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUNBLDBEQUEwRDtBQUcxRDs7R0FFRztBQUNILE1BQWEseUJBQXlCO0lBRUw7SUFBeUM7SUFBdEUsWUFBNkIsY0FBc0IsRUFBbUIsRUFBVTtRQUFuRCxtQkFBYyxHQUFkLGNBQWMsQ0FBUTtRQUFtQixPQUFFLEdBQUYsRUFBRSxDQUFRO0lBQUcsQ0FBQztJQUVwRixPQUFPLENBQUMsT0FBNEI7UUFDaEMsT0FBTyxHQUFHLENBQUMsV0FBVyxDQUFDLGtCQUFrQixDQUFDLE9BQU8sQ0FBQyxLQUFLLEVBQUUsSUFBSSxDQUFDLEVBQUUsRUFBRSxJQUFJLENBQUMsY0FBYyxDQUFDLENBQUM7SUFDM0YsQ0FBQztDQUNKO0FBUEQsOERBT0M7QUFFRDs7O0dBR0c7QUFDSCxNQUFhLHlCQUF5QjtJQVFiO0lBQXdCO0lBQTZCO0lBTjFFOzs7OztPQUtHO0lBQ0gsWUFBcUIsSUFBYSxFQUFXLFVBQWtCLEVBQVcsc0JBQThCO1FBQW5GLFNBQUksR0FBSixJQUFJLENBQVM7UUFBVyxlQUFVLEdBQVYsVUFBVSxDQUFRO1FBQVcsMkJBQXNCLEdBQXRCLHNCQUFzQixDQUFRO0lBQUcsQ0FBQztJQUU1RyxPQUFPLENBQUMsT0FBNEI7UUFDaEMsTUFBTSxVQUFVLEdBQUcsT0FBTyxDQUFDLEdBQUcsQ0FBYyxJQUFJLENBQUMsc0JBQXNCLENBQUMsQ0FBQztRQUV6RSxPQUFPLElBQUksR0FBRyxDQUFDLFdBQVcsQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLElBQUksQ0FBQyxJQUFJLEVBQUU7WUFDakQsVUFBVSxFQUFFLElBQUksQ0FBQyxVQUFVO1lBQzNCLFVBQVUsRUFBRSxHQUFHLENBQUMscUJBQXFCLENBQUMsT0FBTyxDQUFDLFVBQVUsQ0FBQztTQUMxRCxDQUFDLENBQUM7SUFDVCxDQUFDO0NBQ0o7QUFsQkQsOERBa0JDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0ICogYXMgc3BpIGZyb20gJy4uL3NwaSc7XHJcbmltcG9ydCAqIGFzIGFjbSBmcm9tICdhd3MtY2RrLWxpYi9hd3MtY2VydGlmaWNhdGVtYW5hZ2VyJztcclxuaW1wb3J0IHsgSUhvc3RlZFpvbmUgfSBmcm9tICdhd3MtY2RrLWxpYi9hd3Mtcm91dGU1Myc7XHJcblxyXG4vKipcclxuICogQ2VydGlmaWNhdGUgcHJvdmlkZXIgdGhhdCBpbXBvcnRzIGNlcnRpZmljYXRlIGludG8gdGhlIGN1cnJlbnQgc3RhY2sgYnkgYXJuLiBcclxuICovXHJcbmV4cG9ydCBjbGFzcyBJbXBvcnRDZXJ0aWZpY2F0ZVByb3ZpZGVyIGltcGxlbWVudHMgc3BpLlJlc291cmNlUHJvdmlkZXI8YWNtLklDZXJ0aWZpY2F0ZT4ge1xyXG5cclxuICAgIGNvbnN0cnVjdG9yKHByaXZhdGUgcmVhZG9ubHkgY2VydGlmaWNhdGVBcm46IHN0cmluZywgcHJpdmF0ZSByZWFkb25seSBpZDogc3RyaW5nKSB7fVxyXG5cclxuICAgIHByb3ZpZGUoY29udGV4dDogc3BpLlJlc291cmNlQ29udGV4dCkgOiBhY20uSUNlcnRpZmljYXRlIHtcclxuICAgICAgICByZXR1cm4gYWNtLkNlcnRpZmljYXRlLmZyb21DZXJ0aWZpY2F0ZUFybihjb250ZXh0LnNjb3BlLCB0aGlzLmlkLCB0aGlzLmNlcnRpZmljYXRlQXJuKTtcclxuICAgIH1cclxufVxyXG5cclxuLyoqXHJcbiAqIENlcnRpZmljYXRlIHByb3ZpZGVyIHRoYXQgY3JlYXRlcyBhIG5ldyBjZXJ0aWZpY2F0ZS4gXHJcbiAqIEV4cGVjdHMgYSBob3N0ZWQgem9uZSB0byBiZSByZWdpc3RlZCBmb3IgdmFsaWRhdGlvbi4gXHJcbiAqL1xyXG5leHBvcnQgY2xhc3MgQ3JlYXRlQ2VydGlmaWNhdGVQcm92aWRlciBpbXBsZW1lbnRzIHNwaS5SZXNvdXJjZVByb3ZpZGVyPGFjbS5JQ2VydGlmaWNhdGU+IHtcclxuXHJcbiAgICAvKipcclxuICAgICAqIENyZWF0ZXMgdGhlIGNlcnRpZmljYXRlIHByb3ZpZGVyLlxyXG4gICAgICogQHBhcmFtIG5hbWUgTmFtZSBvZiB0aGlzIHJlc291cmNlIHRoYXQgb3RoZXIgcmVzb3VyY2UgcHJvdmlkZXJzLCBhZGQtb25zIGFuZCB0ZWFtcyBjYW4gdXNlIGZvciBsb29rLXVwLlxyXG4gICAgICogQHBhcmFtIGRvbWFpbk5hbWUgXHJcbiAgICAgKiBAcGFyYW0gaG9zdGVkWm9uZVJlc291cmNlTmFtZSBcclxuICAgICAqL1xyXG4gICAgY29uc3RydWN0b3IocmVhZG9ubHkgbmFtZSA6IHN0cmluZywgcmVhZG9ubHkgZG9tYWluTmFtZTogc3RyaW5nLCByZWFkb25seSBob3N0ZWRab25lUmVzb3VyY2VOYW1lOiBzdHJpbmcpIHt9XHJcblxyXG4gICAgcHJvdmlkZShjb250ZXh0OiBzcGkuUmVzb3VyY2VDb250ZXh0KSA6IGFjbS5JQ2VydGlmaWNhdGUge1xyXG4gICAgICAgIGNvbnN0IGhvc3RlZFpvbmUgPSBjb250ZXh0LmdldDxJSG9zdGVkWm9uZT4odGhpcy5ob3N0ZWRab25lUmVzb3VyY2VOYW1lKTtcclxuXHJcbiAgICAgICAgcmV0dXJuIG5ldyBhY20uQ2VydGlmaWNhdGUoY29udGV4dC5zY29wZSwgdGhpcy5uYW1lLCB7XHJcbiAgICAgICAgICAgIGRvbWFpbk5hbWU6IHRoaXMuZG9tYWluTmFtZSxcclxuICAgICAgICAgICAgdmFsaWRhdGlvbjogYWNtLkNlcnRpZmljYXRlVmFsaWRhdGlvbi5mcm9tRG5zKGhvc3RlZFpvbmUpLFxyXG4gICAgICAgICAgfSk7ICAgICAgIFxyXG4gICAgfVxyXG59Il19

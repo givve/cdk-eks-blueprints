@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.uniqueId = uniqueId;
+exports.isToken = isToken;
+const aws_cdk_lib_1 = require("aws-cdk-lib");
+const uuid_1 = require("uuid");
+/**
+ * Generates a globally unique identifier.
+ * @returns string representation of a GUID
+ */
+function uniqueId() {
+    return (0, uuid_1.v4)();
+}
+/**
+ * Tests the input to see if it is a token (unresolved token representation of a reference in CDK, e.g. ${TOKEN[Bucket.Name.1234]})
+ * @param input string containing the string identifier
+ * @returns true if the passed input is a token
+ */
+function isToken(input) {
+    return aws_cdk_lib_1.Token.isUnresolved(input);
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaWQtdXRpbHMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvdXRpbHMvaWQtdXRpbHMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7QUFPQSw0QkFFQztBQU9ELDBCQUVDO0FBbEJELDZDQUFvQztBQUNwQywrQkFBa0M7QUFFbEM7OztHQUdHO0FBQ0gsU0FBZ0IsUUFBUTtJQUNwQixPQUFPLElBQUEsU0FBSSxHQUFFLENBQUM7QUFDbEIsQ0FBQztBQUVEOzs7O0dBSUc7QUFDSCxTQUFnQixPQUFPLENBQUMsS0FBYTtJQUNqQyxPQUFPLG1CQUFLLENBQUMsWUFBWSxDQUFDLEtBQUssQ0FBQyxDQUFDO0FBQ3JDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBUb2tlbiB9IGZyb20gJ2F3cy1jZGstbGliJztcclxuaW1wb3J0IHsgdjQgYXMgdXVpZCB9IGZyb20gJ3V1aWQnO1xyXG5cclxuLyoqXHJcbiAqIEdlbmVyYXRlcyBhIGdsb2JhbGx5IHVuaXF1ZSBpZGVudGlmaWVyLlxyXG4gKiBAcmV0dXJucyBzdHJpbmcgcmVwcmVzZW50YXRpb24gb2YgYSBHVUlEXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gdW5pcXVlSWQoKSA6IHN0cmluZyB7XHJcbiAgICByZXR1cm4gdXVpZCgpO1xyXG59XHJcblxyXG4vKipcclxuICogVGVzdHMgdGhlIGlucHV0IHRvIHNlZSBpZiBpdCBpcyBhIHRva2VuICh1bnJlc29sdmVkIHRva2VuIHJlcHJlc2VudGF0aW9uIG9mIGEgcmVmZXJlbmNlIGluIENESywgZS5nLiAke1RPS0VOW0J1Y2tldC5OYW1lLjEyMzRdfSlcclxuICogQHBhcmFtIGlucHV0IHN0cmluZyBjb250YWluaW5nIHRoZSBzdHJpbmcgaWRlbnRpZmllclxyXG4gKiBAcmV0dXJucyB0cnVlIGlmIHRoZSBwYXNzZWQgaW5wdXQgaXMgYSB0b2tlblxyXG4gKi9cclxuZXhwb3J0IGZ1bmN0aW9uIGlzVG9rZW4oaW5wdXQ6IHN0cmluZykgOiBib29sZWFuIHtcclxuICAgIHJldHVybiBUb2tlbi5pc1VucmVzb2x2ZWQoaW5wdXQpO1xyXG59ICJdfQ==

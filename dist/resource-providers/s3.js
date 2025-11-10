@@ -1,0 +1,44 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CreateS3BucketProvider = exports.ImportS3BucketProvider = void 0;
+const s3 = require("aws-cdk-lib/aws-s3");
+/**
+ * S3 Bucket provider that imports an S3 Bucket into the current stack by name.
+ */
+class ImportS3BucketProvider {
+    s3BucketName;
+    id;
+    /**
+     * @param s3BucketName name of the S3 Bucket to look up
+     * @param id optional id for the structure (for tracking). set to s3bucketname by default
+     */
+    constructor(s3BucketName, id) {
+        this.s3BucketName = s3BucketName;
+        this.id = id;
+    }
+    provide(context) {
+        return s3.Bucket.fromBucketName(context.scope, this.id ?? `${this.s3BucketName}-Lookup`, this.s3BucketName);
+    }
+}
+exports.ImportS3BucketProvider = ImportS3BucketProvider;
+/**
+ * S3 Bucket provider that creates a new S3 Bucket.
+ */
+class CreateS3BucketProvider {
+    options;
+    /**
+     * Creates the S3 provider.
+     * @param name Name of the S3 Bucket. This must be globally unique.
+     */
+    constructor(options) {
+        this.options = options;
+    }
+    provide(context) {
+        return new s3.Bucket(context.scope, this.options.id, {
+            bucketName: this.options.name,
+            ...this.options.s3BucketProps,
+        });
+    }
+}
+exports.CreateS3BucketProvider = CreateS3BucketProvider;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiczMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvcmVzb3VyY2UtcHJvdmlkZXJzL3MzLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUNBLHlDQUF5QztBQVF6Qzs7R0FFRztBQUNILE1BQWEsc0JBQXNCO0lBTUY7SUFBdUM7SUFKcEU7OztPQUdHO0lBQ0gsWUFBNkIsWUFBb0IsRUFBbUIsRUFBVTtRQUFqRCxpQkFBWSxHQUFaLFlBQVksQ0FBUTtRQUFtQixPQUFFLEdBQUYsRUFBRSxDQUFRO0lBQUcsQ0FBQztJQUVsRixPQUFPLENBQUMsT0FBNEI7UUFDaEMsT0FBTyxFQUFFLENBQUMsTUFBTSxDQUFDLGNBQWMsQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLElBQUksQ0FBQyxFQUFFLElBQUksR0FBRyxJQUFJLENBQUMsWUFBWSxTQUFTLEVBQUUsSUFBSSxDQUFDLFlBQVksQ0FBQyxDQUFDO0lBQ2hILENBQUM7Q0FDSjtBQVhELHdEQVdDO0FBRUQ7O0dBRUc7QUFDSCxNQUFhLHNCQUFzQjtJQUV0QixPQUFPLENBQXNCO0lBQ3RDOzs7T0FHRztJQUNILFlBQVksT0FBNEI7UUFDcEMsSUFBSSxDQUFDLE9BQU8sR0FBRyxPQUFPLENBQUM7SUFDM0IsQ0FBQztJQUVELE9BQU8sQ0FBQyxPQUE0QjtRQUNoQyxPQUFPLElBQUksRUFBRSxDQUFDLE1BQU0sQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLElBQUksQ0FBQyxPQUFPLENBQUMsRUFBRSxFQUFFO1lBQ2pELFVBQVUsRUFBRSxJQUFJLENBQUMsT0FBTyxDQUFDLElBQUk7WUFDN0IsR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLGFBQWE7U0FDaEMsQ0FBQyxDQUFDO0lBQ1AsQ0FBQztDQUNKO0FBakJELHdEQWlCQyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIHNwaSBmcm9tICcuLi9zcGknO1xyXG5pbXBvcnQgKiBhcyBzMyBmcm9tICdhd3MtY2RrLWxpYi9hd3MtczMnO1xyXG5cclxuZXhwb3J0IGludGVyZmFjZSBDcmVhdGVTM0J1Y2tldFByb3BzIHtcclxuICAgIHJlYWRvbmx5IG5hbWU/OiBzdHJpbmcsXHJcbiAgICByZWFkb25seSBpZDogc3RyaW5nLFxyXG4gICAgcmVhZG9ubHkgczNCdWNrZXRQcm9wcz86IE9taXQ8czMuQnVja2V0UHJvcHMsIFwiYnVja2V0TmFtZVwiPlxyXG59XHJcblxyXG4vKipcclxuICogUzMgQnVja2V0IHByb3ZpZGVyIHRoYXQgaW1wb3J0cyBhbiBTMyBCdWNrZXQgaW50byB0aGUgY3VycmVudCBzdGFjayBieSBuYW1lLiBcclxuICovXHJcbmV4cG9ydCBjbGFzcyBJbXBvcnRTM0J1Y2tldFByb3ZpZGVyIGltcGxlbWVudHMgc3BpLlJlc291cmNlUHJvdmlkZXI8czMuSUJ1Y2tldD4ge1xyXG5cclxuICAgIC8qKlxyXG4gICAgICogQHBhcmFtIHMzQnVja2V0TmFtZSBuYW1lIG9mIHRoZSBTMyBCdWNrZXQgdG8gbG9vayB1cFxyXG4gICAgICogQHBhcmFtIGlkIG9wdGlvbmFsIGlkIGZvciB0aGUgc3RydWN0dXJlIChmb3IgdHJhY2tpbmcpLiBzZXQgdG8gczNidWNrZXRuYW1lIGJ5IGRlZmF1bHRcclxuICAgICAqL1xyXG4gICAgY29uc3RydWN0b3IocHJpdmF0ZSByZWFkb25seSBzM0J1Y2tldE5hbWU6IHN0cmluZywgcHJpdmF0ZSByZWFkb25seSBpZDogc3RyaW5nKSB7fVxyXG5cclxuICAgIHByb3ZpZGUoY29udGV4dDogc3BpLlJlc291cmNlQ29udGV4dCkgOiBzMy5JQnVja2V0IHtcclxuICAgICAgICByZXR1cm4gczMuQnVja2V0LmZyb21CdWNrZXROYW1lKGNvbnRleHQuc2NvcGUsIHRoaXMuaWQgPz8gYCR7dGhpcy5zM0J1Y2tldE5hbWV9LUxvb2t1cGAsIHRoaXMuczNCdWNrZXROYW1lKTtcclxuICAgIH1cclxufVxyXG5cclxuLyoqXHJcbiAqIFMzIEJ1Y2tldCBwcm92aWRlciB0aGF0IGNyZWF0ZXMgYSBuZXcgUzMgQnVja2V0LiBcclxuICovXHJcbmV4cG9ydCBjbGFzcyBDcmVhdGVTM0J1Y2tldFByb3ZpZGVyIGltcGxlbWVudHMgc3BpLlJlc291cmNlUHJvdmlkZXI8czMuSUJ1Y2tldD4ge1xyXG5cclxuICAgIHJlYWRvbmx5IG9wdGlvbnM6IENyZWF0ZVMzQnVja2V0UHJvcHM7XHJcbiAgICAvKipcclxuICAgICAqIENyZWF0ZXMgdGhlIFMzIHByb3ZpZGVyLlxyXG4gICAgICogQHBhcmFtIG5hbWUgTmFtZSBvZiB0aGUgUzMgQnVja2V0LiBUaGlzIG11c3QgYmUgZ2xvYmFsbHkgdW5pcXVlLlxyXG4gICAgICovXHJcbiAgICBjb25zdHJ1Y3RvcihvcHRpb25zOiBDcmVhdGVTM0J1Y2tldFByb3BzKSB7XHJcbiAgICAgICAgdGhpcy5vcHRpb25zID0gb3B0aW9ucztcclxuICAgIH1cclxuXHJcbiAgICBwcm92aWRlKGNvbnRleHQ6IHNwaS5SZXNvdXJjZUNvbnRleHQpIDogczMuSUJ1Y2tldCB7XHJcbiAgICAgICAgcmV0dXJuIG5ldyBzMy5CdWNrZXQoY29udGV4dC5zY29wZSwgdGhpcy5vcHRpb25zLmlkLCB7XHJcbiAgICAgICAgICAgIGJ1Y2tldE5hbWU6IHRoaXMub3B0aW9ucy5uYW1lLFxyXG4gICAgICAgICAgICAuLi50aGlzLm9wdGlvbnMuczNCdWNrZXRQcm9wcyxcclxuICAgICAgICB9KTsgICAgICAgXHJcbiAgICB9XHJcbn0iXX0=

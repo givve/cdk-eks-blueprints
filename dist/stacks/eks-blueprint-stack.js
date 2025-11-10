@@ -1,0 +1,78 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EksBlueprint = exports.BlueprintBuilder = void 0;
+const cdk = require("aws-cdk-lib");
+const utils = require("../utils");
+const eks_blueprint_construct_1 = require("./eks-blueprint-construct");
+/**
+ * Blueprint builder implements a builder pattern that improves readability (no bloated constructors)
+ * and allows creating a blueprint in an abstract state that can be applied to various instantiations
+ * in accounts and regions.
+ */
+class BlueprintBuilder extends eks_blueprint_construct_1.BlueprintConstructBuilder {
+    constructor() {
+        super();
+        this.props = { ...this.props, ...{ compatibilityMode: true } };
+    }
+    clone(region, account) {
+        return new BlueprintBuilder().withBlueprintProps(this.props)
+            .account(account ?? this.env.account).region(region ?? this.env.region);
+    }
+    build(scope, id, stackProps) {
+        return new EksBlueprint(scope, { ...this.props, ...{ id } }, { ...{ env: this.env }, ...stackProps });
+    }
+    /**
+     * Sets compatibility mode
+     * @param compatibilityMode if true will attach blueprints resources directly to the stack.
+     * @returns
+     */
+    compatibilityMode(compatibilityMode) {
+        this.props = { ...this.props, ...{ compatibilityMode } };
+        return this;
+    }
+    async buildAsync(scope, id, stackProps) {
+        return this.build(scope, id, stackProps).waitForAsyncTasks();
+    }
+}
+exports.BlueprintBuilder = BlueprintBuilder;
+/**
+ * Entry point to the platform provisioning. Creates a CFN stack based on the provided configuration
+ * and orchestrates provisioning of add-ons, teams and post deployment hooks.
+ */
+class EksBlueprint extends cdk.Stack {
+    static USAGE_ID = "uksb-mjpcijbp3i"; //"qs-1s1r465hk";
+    asyncTasks;
+    clusterInfo;
+    static builder() {
+        return new BlueprintBuilder();
+    }
+    constructor(scope, blueprintProps, props) {
+        super(scope, blueprintProps.id, utils.withUsageTracking(EksBlueprint.USAGE_ID, props));
+        const eksBlueprintConstruct = new eks_blueprint_construct_1.EksBlueprintConstruct(this, blueprintProps);
+        this.clusterInfo = eksBlueprintConstruct.getClusterInfo();
+        this.asyncTasks = eksBlueprintConstruct.getAsyncTasks();
+    }
+    /**
+     * Since constructor cannot be marked as async, adding a separate method to wait
+     * for async code to finish.
+     * @returns Promise that resolves to the blueprint
+     */
+    async waitForAsyncTasks() {
+        if (this.asyncTasks) {
+            return this.asyncTasks.then(() => {
+                return this;
+            });
+        }
+        return Promise.resolve(this);
+    }
+    /**
+     * This method returns all the constructs produced by during the cluster creation (e.g. add-ons).
+     * May be used in testing for verification.
+     * @returns cluster info object
+     */
+    getClusterInfo() {
+        return this.clusterInfo;
+    }
+}
+exports.EksBlueprint = EksBlueprint;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZWtzLWJsdWVwcmludC1zdGFjay5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL2xpYi9zdGFja3MvZWtzLWJsdWVwcmludC1zdGFjay50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSxtQ0FBbUM7QUFHbkMsa0NBQWtDO0FBQ2xDLHVFQUE4RztBQUU5Rzs7OztHQUlHO0FBQ0gsTUFBYSxnQkFBaUIsU0FBUSxtREFBeUI7SUFDM0Q7UUFDSSxLQUFLLEVBQUUsQ0FBQztRQUNSLElBQUksQ0FBQyxLQUFLLEdBQUcsRUFBRSxHQUFHLElBQUksQ0FBQyxLQUFLLEVBQUUsR0FBRyxFQUFFLGlCQUFpQixFQUFFLElBQUksRUFBRSxFQUFFLENBQUM7SUFDbkUsQ0FBQztJQUVNLEtBQUssQ0FBQyxNQUFlLEVBQUUsT0FBZ0I7UUFDMUMsT0FBTyxJQUFJLGdCQUFnQixFQUFFLENBQUMsa0JBQWtCLENBQUMsSUFBSSxDQUFDLEtBQUssQ0FBQzthQUN2RCxPQUFPLENBQUMsT0FBTyxJQUFJLElBQUksQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLENBQUMsTUFBTSxDQUFDLE1BQU0sSUFBSSxJQUFJLENBQUMsR0FBRyxDQUFDLE1BQU0sQ0FBQyxDQUFDO0lBQ2hGLENBQUM7SUFDTSxLQUFLLENBQUMsS0FBZ0IsRUFBRSxFQUFVLEVBQUUsVUFBMkI7UUFDbEUsT0FBTyxJQUFJLFlBQVksQ0FBQyxLQUFLLEVBQUUsRUFBRSxHQUFHLElBQUksQ0FBQyxLQUFLLEVBQUUsR0FBRyxFQUFFLEVBQUUsRUFBRSxFQUFFLEVBQ3ZELEVBQUUsR0FBRyxFQUFFLEdBQUcsRUFBRSxJQUFJLENBQUMsR0FBRyxFQUFFLEVBQUUsR0FBRyxVQUFVLEVBQUUsQ0FBQyxDQUFDO0lBQ2pELENBQUM7SUFFRDs7OztPQUlHO0lBQ0ksaUJBQWlCLENBQUMsaUJBQTBCO1FBQy9DLElBQUksQ0FBQyxLQUFLLEdBQUcsRUFBRSxHQUFHLElBQUksQ0FBQyxLQUFLLEVBQUUsR0FBRyxFQUFFLGlCQUFpQixFQUFFLEVBQUUsQ0FBQztRQUN6RCxPQUFPLElBQUksQ0FBQztJQUNoQixDQUFDO0lBRU0sS0FBSyxDQUFDLFVBQVUsQ0FBQyxLQUFnQixFQUFFLEVBQVUsRUFBRSxVQUEyQjtRQUM3RSxPQUFPLElBQUksQ0FBQyxLQUFLLENBQUMsS0FBSyxFQUFFLEVBQUUsRUFBRSxVQUFVLENBQUMsQ0FBQyxpQkFBaUIsRUFBRSxDQUFDO0lBQ2pFLENBQUM7Q0FDSjtBQTVCRCw0Q0E0QkM7QUFFRDs7O0dBR0c7QUFDSCxNQUFhLFlBQWEsU0FBUSxHQUFHLENBQUMsS0FBSztJQUV2QyxNQUFNLENBQVUsUUFBUSxHQUFHLGlCQUFpQixDQUFDLENBQUMsaUJBQWlCO0lBRXZELFVBQVUsQ0FBOEI7SUFFeEMsV0FBVyxDQUFrQjtJQUU5QixNQUFNLENBQUMsT0FBTztRQUNqQixPQUFPLElBQUksZ0JBQWdCLEVBQUUsQ0FBQztJQUNsQyxDQUFDO0lBRUQsWUFBWSxLQUFnQixFQUFFLGNBQWlDLEVBQUUsS0FBc0I7UUFDbkYsS0FBSyxDQUFDLEtBQUssRUFBRSxjQUFjLENBQUMsRUFBRSxFQUFFLEtBQUssQ0FBQyxpQkFBaUIsQ0FBQyxZQUFZLENBQUMsUUFBUSxFQUFFLEtBQUssQ0FBQyxDQUFDLENBQUM7UUFDdkYsTUFBTSxxQkFBcUIsR0FBRyxJQUFJLCtDQUFxQixDQUFDLElBQUksRUFBRSxjQUFjLENBQUMsQ0FBQztRQUM5RSxJQUFJLENBQUMsV0FBVyxHQUFHLHFCQUFxQixDQUFDLGNBQWMsRUFBRSxDQUFDO1FBQzFELElBQUksQ0FBQyxVQUFVLEdBQUcscUJBQXFCLENBQUMsYUFBYSxFQUFFLENBQUM7SUFDNUQsQ0FBQztJQUVEOzs7O09BSUc7SUFDSSxLQUFLLENBQUMsaUJBQWlCO1FBQzFCLElBQUksSUFBSSxDQUFDLFVBQVUsRUFBRSxDQUFDO1lBQ2xCLE9BQU8sSUFBSSxDQUFDLFVBQVUsQ0FBQyxJQUFJLENBQUMsR0FBRyxFQUFFO2dCQUM3QixPQUFPLElBQUksQ0FBQztZQUNoQixDQUFDLENBQUMsQ0FBQztRQUNQLENBQUM7UUFDRCxPQUFPLE9BQU8sQ0FBQyxPQUFPLENBQUMsSUFBSSxDQUFDLENBQUM7SUFDakMsQ0FBQztJQUVEOzs7O09BSUc7SUFDSCxjQUFjO1FBQ1YsT0FBTyxJQUFJLENBQUMsV0FBVyxDQUFDO0lBQzVCLENBQUM7O0FBeENMLG9DQXlDQyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIGNkayBmcm9tICdhd3MtY2RrLWxpYic7XHJcbmltcG9ydCB7IENvbnN0cnVjdCB9IGZyb20gJ2NvbnN0cnVjdHMnO1xyXG5pbXBvcnQgKiBhcyBzcGkgZnJvbSAnLi4vc3BpJztcclxuaW1wb3J0ICogYXMgdXRpbHMgZnJvbSAnLi4vdXRpbHMnO1xyXG5pbXBvcnQge0JsdWVwcmludENvbnN0cnVjdEJ1aWxkZXIsIEVrc0JsdWVwcmludENvbnN0cnVjdCwgRWtzQmx1ZXByaW50UHJvcHN9IGZyb20gXCIuL2Vrcy1ibHVlcHJpbnQtY29uc3RydWN0XCI7XHJcblxyXG4vKipcclxuICogQmx1ZXByaW50IGJ1aWxkZXIgaW1wbGVtZW50cyBhIGJ1aWxkZXIgcGF0dGVybiB0aGF0IGltcHJvdmVzIHJlYWRhYmlsaXR5IChubyBibG9hdGVkIGNvbnN0cnVjdG9ycylcclxuICogYW5kIGFsbG93cyBjcmVhdGluZyBhIGJsdWVwcmludCBpbiBhbiBhYnN0cmFjdCBzdGF0ZSB0aGF0IGNhbiBiZSBhcHBsaWVkIHRvIHZhcmlvdXMgaW5zdGFudGlhdGlvbnNcclxuICogaW4gYWNjb3VudHMgYW5kIHJlZ2lvbnMuXHJcbiAqL1xyXG5leHBvcnQgY2xhc3MgQmx1ZXByaW50QnVpbGRlciBleHRlbmRzIEJsdWVwcmludENvbnN0cnVjdEJ1aWxkZXIgaW1wbGVtZW50cyBzcGkuQXN5bmNTdGFja0J1aWxkZXIge1xyXG4gICAgY29uc3RydWN0b3IoKSB7XHJcbiAgICAgICAgc3VwZXIoKTtcclxuICAgICAgICB0aGlzLnByb3BzID0geyAuLi50aGlzLnByb3BzLCAuLi57IGNvbXBhdGliaWxpdHlNb2RlOiB0cnVlIH0gfTtcclxuICAgIH1cclxuXHJcbiAgICBwdWJsaWMgY2xvbmUocmVnaW9uPzogc3RyaW5nLCBhY2NvdW50Pzogc3RyaW5nKTogQmx1ZXByaW50QnVpbGRlciB7XHJcbiAgICAgICAgcmV0dXJuIG5ldyBCbHVlcHJpbnRCdWlsZGVyKCkud2l0aEJsdWVwcmludFByb3BzKHRoaXMucHJvcHMpXHJcbiAgICAgICAgICAgIC5hY2NvdW50KGFjY291bnQgPz8gdGhpcy5lbnYuYWNjb3VudCkucmVnaW9uKHJlZ2lvbiA/PyB0aGlzLmVudi5yZWdpb24pO1xyXG4gICAgfVxyXG4gICAgcHVibGljIGJ1aWxkKHNjb3BlOiBDb25zdHJ1Y3QsIGlkOiBzdHJpbmcsIHN0YWNrUHJvcHM/OiBjZGsuU3RhY2tQcm9wcyk6IEVrc0JsdWVwcmludCB7XHJcbiAgICAgICAgcmV0dXJuIG5ldyBFa3NCbHVlcHJpbnQoc2NvcGUsIHsgLi4udGhpcy5wcm9wcywgLi4ueyBpZCB9IH0sXHJcbiAgICAgICAgICAgIHsgLi4ueyBlbnY6IHRoaXMuZW52IH0sIC4uLnN0YWNrUHJvcHMgfSk7XHJcbiAgICB9XHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBTZXRzIGNvbXBhdGliaWxpdHkgbW9kZVxyXG4gICAgICogQHBhcmFtIGNvbXBhdGliaWxpdHlNb2RlIGlmIHRydWUgd2lsbCBhdHRhY2ggYmx1ZXByaW50cyByZXNvdXJjZXMgZGlyZWN0bHkgdG8gdGhlIHN0YWNrLlxyXG4gICAgICogQHJldHVybnMgXHJcbiAgICAgKi9cclxuICAgIHB1YmxpYyBjb21wYXRpYmlsaXR5TW9kZShjb21wYXRpYmlsaXR5TW9kZTogYm9vbGVhbik6IEJsdWVwcmludEJ1aWxkZXIge1xyXG4gICAgICAgIHRoaXMucHJvcHMgPSB7IC4uLnRoaXMucHJvcHMsIC4uLnsgY29tcGF0aWJpbGl0eU1vZGUgfSB9O1xyXG4gICAgICAgIHJldHVybiB0aGlzO1xyXG4gICAgfVxyXG5cclxuICAgIHB1YmxpYyBhc3luYyBidWlsZEFzeW5jKHNjb3BlOiBDb25zdHJ1Y3QsIGlkOiBzdHJpbmcsIHN0YWNrUHJvcHM/OiBjZGsuU3RhY2tQcm9wcyk6IFByb21pc2U8RWtzQmx1ZXByaW50PiB7XHJcbiAgICAgICAgcmV0dXJuIHRoaXMuYnVpbGQoc2NvcGUsIGlkLCBzdGFja1Byb3BzKS53YWl0Rm9yQXN5bmNUYXNrcygpO1xyXG4gICAgfVxyXG59XHJcblxyXG4vKipcclxuICogRW50cnkgcG9pbnQgdG8gdGhlIHBsYXRmb3JtIHByb3Zpc2lvbmluZy4gQ3JlYXRlcyBhIENGTiBzdGFjayBiYXNlZCBvbiB0aGUgcHJvdmlkZWQgY29uZmlndXJhdGlvblxyXG4gKiBhbmQgb3JjaGVzdHJhdGVzIHByb3Zpc2lvbmluZyBvZiBhZGQtb25zLCB0ZWFtcyBhbmQgcG9zdCBkZXBsb3ltZW50IGhvb2tzLlxyXG4gKi9cclxuZXhwb3J0IGNsYXNzIEVrc0JsdWVwcmludCBleHRlbmRzIGNkay5TdGFjayB7XHJcblxyXG4gICAgc3RhdGljIHJlYWRvbmx5IFVTQUdFX0lEID0gXCJ1a3NiLW1qcGNpamJwM2lcIjsgLy9cInFzLTFzMXI0NjVoa1wiO1xyXG5cclxuICAgIHByaXZhdGUgYXN5bmNUYXNrczogUHJvbWlzZTx2b2lkIHwgQ29uc3RydWN0W10+O1xyXG5cclxuICAgIHByaXZhdGUgY2x1c3RlckluZm86IHNwaS5DbHVzdGVySW5mbztcclxuXHJcbiAgICBwdWJsaWMgc3RhdGljIGJ1aWxkZXIoKTogQmx1ZXByaW50QnVpbGRlciB7XHJcbiAgICAgICAgcmV0dXJuIG5ldyBCbHVlcHJpbnRCdWlsZGVyKCk7XHJcbiAgICB9XHJcblxyXG4gICAgY29uc3RydWN0b3Ioc2NvcGU6IENvbnN0cnVjdCwgYmx1ZXByaW50UHJvcHM6IEVrc0JsdWVwcmludFByb3BzLCBwcm9wcz86IGNkay5TdGFja1Byb3BzKSB7XHJcbiAgICAgICAgc3VwZXIoc2NvcGUsIGJsdWVwcmludFByb3BzLmlkLCB1dGlscy53aXRoVXNhZ2VUcmFja2luZyhFa3NCbHVlcHJpbnQuVVNBR0VfSUQsIHByb3BzKSk7XHJcbiAgICAgICAgY29uc3QgZWtzQmx1ZXByaW50Q29uc3RydWN0ID0gbmV3IEVrc0JsdWVwcmludENvbnN0cnVjdCh0aGlzLCBibHVlcHJpbnRQcm9wcyk7XHJcbiAgICAgICAgdGhpcy5jbHVzdGVySW5mbyA9IGVrc0JsdWVwcmludENvbnN0cnVjdC5nZXRDbHVzdGVySW5mbygpO1xyXG4gICAgICAgIHRoaXMuYXN5bmNUYXNrcyA9IGVrc0JsdWVwcmludENvbnN0cnVjdC5nZXRBc3luY1Rhc2tzKCk7XHJcbiAgICB9XHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBTaW5jZSBjb25zdHJ1Y3RvciBjYW5ub3QgYmUgbWFya2VkIGFzIGFzeW5jLCBhZGRpbmcgYSBzZXBhcmF0ZSBtZXRob2QgdG8gd2FpdFxyXG4gICAgICogZm9yIGFzeW5jIGNvZGUgdG8gZmluaXNoLlxyXG4gICAgICogQHJldHVybnMgUHJvbWlzZSB0aGF0IHJlc29sdmVzIHRvIHRoZSBibHVlcHJpbnRcclxuICAgICAqL1xyXG4gICAgcHVibGljIGFzeW5jIHdhaXRGb3JBc3luY1Rhc2tzKCk6IFByb21pc2U8RWtzQmx1ZXByaW50PiB7XHJcbiAgICAgICAgaWYgKHRoaXMuYXN5bmNUYXNrcykge1xyXG4gICAgICAgICAgICByZXR1cm4gdGhpcy5hc3luY1Rhc2tzLnRoZW4oKCkgPT4ge1xyXG4gICAgICAgICAgICAgICAgcmV0dXJuIHRoaXM7XHJcbiAgICAgICAgICAgIH0pO1xyXG4gICAgICAgIH1cclxuICAgICAgICByZXR1cm4gUHJvbWlzZS5yZXNvbHZlKHRoaXMpO1xyXG4gICAgfVxyXG5cclxuICAgIC8qKlxyXG4gICAgICogVGhpcyBtZXRob2QgcmV0dXJucyBhbGwgdGhlIGNvbnN0cnVjdHMgcHJvZHVjZWQgYnkgZHVyaW5nIHRoZSBjbHVzdGVyIGNyZWF0aW9uIChlLmcuIGFkZC1vbnMpLlxyXG4gICAgICogTWF5IGJlIHVzZWQgaW4gdGVzdGluZyBmb3IgdmVyaWZpY2F0aW9uLlxyXG4gICAgICogQHJldHVybnMgY2x1c3RlciBpbmZvIG9iamVjdFxyXG4gICAgICovXHJcbiAgICBnZXRDbHVzdGVySW5mbygpOiBzcGkuQ2x1c3RlckluZm8ge1xyXG4gICAgICAgIHJldHVybiB0aGlzLmNsdXN0ZXJJbmZvO1xyXG4gICAgfVxyXG59XHJcblxyXG4iXX0=

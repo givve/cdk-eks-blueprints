@@ -1,0 +1,88 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DelegatingHostedZoneProvider = exports.ImportHostedZoneProvider = exports.LookupHostedZoneProvider = void 0;
+const aws_iam_1 = require("aws-cdk-lib/aws-iam");
+const r53 = require("aws-cdk-lib/aws-route53");
+const aws_cdk_lib_1 = require("aws-cdk-lib");
+/**
+ * Simple lookup host zone provider
+ */
+class LookupHostedZoneProvider {
+    hostedZoneName;
+    id;
+    /**
+     * @param hostedZoneName name of the host zone to lookup
+     * @param id  optional id for the structure (for tracking). set to hostzonename by default
+     */
+    constructor(hostedZoneName, id) {
+        this.hostedZoneName = hostedZoneName;
+        this.id = id;
+    }
+    provide(context) {
+        return r53.HostedZone.fromLookup(context.scope, this.id ?? `${this.hostedZoneName}-Lookup`, { domainName: this.hostedZoneName });
+    }
+}
+exports.LookupHostedZoneProvider = LookupHostedZoneProvider;
+/**
+ * Direct import hosted zone provider, based on a known hosted zone ID.
+ * Recommended method if hosted zone id is known, as it avoids extra look-ups.
+ */
+class ImportHostedZoneProvider {
+    hostedZoneId;
+    id;
+    constructor(hostedZoneId, id) {
+        this.hostedZoneId = hostedZoneId;
+        this.id = id;
+    }
+    provide(context) {
+        return r53.HostedZone.fromHostedZoneId(context.scope, this.id ?? `${this.hostedZoneId}-Import`, this.hostedZoneId);
+    }
+}
+exports.ImportHostedZoneProvider = ImportHostedZoneProvider;
+/**
+ * Delegating provider is a convenience approach to have a global hosted zone record in a centralized
+ * account and subdomain records in respective workload accounts.
+ *
+ * The delegation part allows routing subdomain entries to the child hosted zone in the workload account.
+ */
+class DelegatingHostedZoneProvider {
+    options;
+    constructor(options) {
+        this.options = options;
+    }
+    provide(context) {
+        const stack = aws_cdk_lib_1.Stack.of(context.scope);
+        const subZone = new r53.PublicHostedZone(stack, `${this.options.subdomain}-SubZone`, {
+            zoneName: this.options.subdomain
+        });
+        if (this.options.wildcardSubdomain) {
+            new r53.CnameRecord(stack, `${this.options.subdomain}-cname`, {
+                zone: subZone,
+                domainName: `${this.options.subdomain}`,
+                recordName: `*.${this.options.subdomain}`
+            });
+        }
+        // 
+        // import the delegation role by constructing the roleArn.
+        // Assuming the parent account has the delegating role with 
+        // trust relationship setup to the child account.
+        //
+        const delegationRoleArn = stack.formatArn({
+            region: '', // IAM is global in each partition
+            service: 'iam',
+            account: this.options.parentDnsAccountId,
+            resource: 'role',
+            resourceName: this.options.delegatingRoleName
+        });
+        const delegationRole = aws_iam_1.Role.fromRoleArn(stack, `${this.options.subdomain}-DelegationRole`, delegationRoleArn);
+        // create the record
+        new r53.CrossAccountZoneDelegationRecord(stack, `${this.options.subdomain}-delegate`, {
+            delegatedZone: subZone,
+            parentHostedZoneName: this.options.parentDomain, // or you can use parentHostedZoneId
+            delegationRole
+        });
+        return subZone;
+    }
+}
+exports.DelegatingHostedZoneProvider = DelegatingHostedZoneProvider;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaG9zdGVkLXpvbmUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9saWIvcmVzb3VyY2UtcHJvdmlkZXJzL2hvc3RlZC16b25lLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7OztBQUFBLGlEQUEyQztBQUMzQywrQ0FBK0M7QUFFL0MsNkNBQWtDO0FBRWxDOztHQUVHO0FBQ0gsTUFBYSx3QkFBd0I7SUFNYjtJQUFnQztJQUpwRDs7O09BR0c7SUFDSCxZQUFvQixjQUFzQixFQUFVLEVBQVc7UUFBM0MsbUJBQWMsR0FBZCxjQUFjLENBQVE7UUFBVSxPQUFFLEdBQUYsRUFBRSxDQUFTO0lBQUksQ0FBQztJQUVwRSxPQUFPLENBQUMsT0FBd0I7UUFDNUIsT0FBTyxHQUFHLENBQUMsVUFBVSxDQUFDLFVBQVUsQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLElBQUksQ0FBQyxFQUFFLElBQUksR0FBRyxJQUFJLENBQUMsY0FBYyxTQUFTLEVBQUUsRUFBRSxVQUFVLEVBQUUsSUFBSSxDQUFDLGNBQWMsRUFBRSxDQUFDLENBQUM7SUFDckksQ0FBQztDQUNKO0FBWEQsNERBV0M7QUFDRDs7O0dBR0c7QUFDSCxNQUFhLHdCQUF3QjtJQUViO0lBQThCO0lBQWxELFlBQW9CLFlBQW9CLEVBQVUsRUFBVztRQUF6QyxpQkFBWSxHQUFaLFlBQVksQ0FBUTtRQUFVLE9BQUUsR0FBRixFQUFFLENBQVM7SUFBSSxDQUFDO0lBRWxFLE9BQU8sQ0FBQyxPQUF3QjtRQUM1QixPQUFPLEdBQUcsQ0FBQyxVQUFVLENBQUMsZ0JBQWdCLENBQUMsT0FBTyxDQUFDLEtBQUssRUFBRSxJQUFJLENBQUMsRUFBRSxJQUFJLEdBQUcsSUFBSSxDQUFDLFlBQVksU0FBUyxFQUFFLElBQUksQ0FBQyxZQUFZLENBQUMsQ0FBQztJQUN2SCxDQUFDO0NBRUo7QUFSRCw0REFRQztBQStCRDs7Ozs7R0FLRztBQUNILE1BQWEsNEJBQTRCO0lBQ2pCO0lBQXBCLFlBQW9CLE9BQTBDO1FBQTFDLFlBQU8sR0FBUCxPQUFPLENBQW1DO0lBQUksQ0FBQztJQUVuRSxPQUFPLENBQUMsT0FBd0I7UUFDNUIsTUFBTSxLQUFLLEdBQUcsbUJBQUssQ0FBQyxFQUFFLENBQUMsT0FBTyxDQUFDLEtBQUssQ0FBQyxDQUFDO1FBRXRDLE1BQU0sT0FBTyxHQUFHLElBQUksR0FBRyxDQUFDLGdCQUFnQixDQUFDLEtBQUssRUFBRSxHQUFHLElBQUksQ0FBQyxPQUFPLENBQUMsU0FBUyxVQUFVLEVBQUU7WUFDakYsUUFBUSxFQUFFLElBQUksQ0FBQyxPQUFPLENBQUMsU0FBUztTQUNuQyxDQUFDLENBQUM7UUFFSCxJQUFJLElBQUksQ0FBQyxPQUFPLENBQUMsaUJBQWlCLEVBQUUsQ0FBQztZQUNqQyxJQUFJLEdBQUcsQ0FBQyxXQUFXLENBQUMsS0FBSyxFQUFFLEdBQUcsSUFBSSxDQUFDLE9BQU8sQ0FBQyxTQUFTLFFBQVEsRUFBRTtnQkFDMUQsSUFBSSxFQUFFLE9BQU87Z0JBQ2IsVUFBVSxFQUFFLEdBQUcsSUFBSSxDQUFDLE9BQU8sQ0FBQyxTQUFTLEVBQUU7Z0JBQ3ZDLFVBQVUsRUFBRSxLQUFLLElBQUksQ0FBQyxPQUFPLENBQUMsU0FBUyxFQUFFO2FBQzVDLENBQUMsQ0FBQztRQUNQLENBQUM7UUFFRCxHQUFHO1FBQ0gsMERBQTBEO1FBQzFELDREQUE0RDtRQUM1RCxpREFBaUQ7UUFDakQsRUFBRTtRQUNGLE1BQU0saUJBQWlCLEdBQUcsS0FBSyxDQUFDLFNBQVMsQ0FBQztZQUN0QyxNQUFNLEVBQUUsRUFBRSxFQUFFLGtDQUFrQztZQUM5QyxPQUFPLEVBQUUsS0FBSztZQUNkLE9BQU8sRUFBRSxJQUFJLENBQUMsT0FBTyxDQUFDLGtCQUFrQjtZQUN4QyxRQUFRLEVBQUUsTUFBTTtZQUNoQixZQUFZLEVBQUUsSUFBSSxDQUFDLE9BQU8sQ0FBQyxrQkFBa0I7U0FDaEQsQ0FBQyxDQUFDO1FBRUgsTUFBTSxjQUFjLEdBQUcsY0FBSSxDQUFDLFdBQVcsQ0FBQyxLQUFLLEVBQUUsR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLFNBQVMsaUJBQWlCLEVBQUUsaUJBQWlCLENBQUMsQ0FBQztRQUU5RyxvQkFBb0I7UUFDcEIsSUFBSSxHQUFHLENBQUMsZ0NBQWdDLENBQUMsS0FBSyxFQUFFLEdBQUcsSUFBSSxDQUFDLE9BQU8sQ0FBQyxTQUFTLFdBQVcsRUFBRTtZQUNsRixhQUFhLEVBQUUsT0FBTztZQUN0QixvQkFBb0IsRUFBRSxJQUFJLENBQUMsT0FBTyxDQUFDLFlBQVksRUFBRSxvQ0FBb0M7WUFDckYsY0FBYztTQUNqQixDQUFDLENBQUM7UUFFSCxPQUFPLE9BQU8sQ0FBQztJQUNuQixDQUFDO0NBQ0o7QUExQ0Qsb0VBMENDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgUm9sZSB9IGZyb20gXCJhd3MtY2RrLWxpYi9hd3MtaWFtXCI7XHJcbmltcG9ydCAqIGFzIHI1MyBmcm9tICdhd3MtY2RrLWxpYi9hd3Mtcm91dGU1Myc7XHJcbmltcG9ydCB7IFJlc291cmNlQ29udGV4dCwgUmVzb3VyY2VQcm92aWRlciB9IGZyb20gXCIuLi9zcGlcIjtcclxuaW1wb3J0IHtTdGFja30gZnJvbSBcImF3cy1jZGstbGliXCI7XHJcblxyXG4vKipcclxuICogU2ltcGxlIGxvb2t1cCBob3N0IHpvbmUgcHJvdmlkZXJcclxuICovXHJcbmV4cG9ydCBjbGFzcyBMb29rdXBIb3N0ZWRab25lUHJvdmlkZXIgaW1wbGVtZW50cyBSZXNvdXJjZVByb3ZpZGVyPHI1My5JSG9zdGVkWm9uZT4ge1xyXG5cclxuICAgIC8qKlxyXG4gICAgICogQHBhcmFtIGhvc3RlZFpvbmVOYW1lIG5hbWUgb2YgdGhlIGhvc3Qgem9uZSB0byBsb29rdXBcclxuICAgICAqIEBwYXJhbSBpZCAgb3B0aW9uYWwgaWQgZm9yIHRoZSBzdHJ1Y3R1cmUgKGZvciB0cmFja2luZykuIHNldCB0byBob3N0em9uZW5hbWUgYnkgZGVmYXVsdFxyXG4gICAgICovXHJcbiAgICBjb25zdHJ1Y3Rvcihwcml2YXRlIGhvc3RlZFpvbmVOYW1lOiBzdHJpbmcsIHByaXZhdGUgaWQ/OiBzdHJpbmcpIHsgfVxyXG5cclxuICAgIHByb3ZpZGUoY29udGV4dDogUmVzb3VyY2VDb250ZXh0KTogcjUzLklIb3N0ZWRab25lIHtcclxuICAgICAgICByZXR1cm4gcjUzLkhvc3RlZFpvbmUuZnJvbUxvb2t1cChjb250ZXh0LnNjb3BlLCB0aGlzLmlkID8/IGAke3RoaXMuaG9zdGVkWm9uZU5hbWV9LUxvb2t1cGAsIHsgZG9tYWluTmFtZTogdGhpcy5ob3N0ZWRab25lTmFtZSB9KTtcclxuICAgIH1cclxufVxyXG4vKipcclxuICogRGlyZWN0IGltcG9ydCBob3N0ZWQgem9uZSBwcm92aWRlciwgYmFzZWQgb24gYSBrbm93biBob3N0ZWQgem9uZSBJRC4gXHJcbiAqIFJlY29tbWVuZGVkIG1ldGhvZCBpZiBob3N0ZWQgem9uZSBpZCBpcyBrbm93biwgYXMgaXQgYXZvaWRzIGV4dHJhIGxvb2stdXBzLlxyXG4gKi9cclxuZXhwb3J0IGNsYXNzIEltcG9ydEhvc3RlZFpvbmVQcm92aWRlciBpbXBsZW1lbnRzIFJlc291cmNlUHJvdmlkZXI8cjUzLklIb3N0ZWRab25lPiB7XHJcblxyXG4gICAgY29uc3RydWN0b3IocHJpdmF0ZSBob3N0ZWRab25lSWQ6IHN0cmluZywgcHJpdmF0ZSBpZD86IHN0cmluZykgeyB9XHJcblxyXG4gICAgcHJvdmlkZShjb250ZXh0OiBSZXNvdXJjZUNvbnRleHQpOiByNTMuSUhvc3RlZFpvbmUge1xyXG4gICAgICAgIHJldHVybiByNTMuSG9zdGVkWm9uZS5mcm9tSG9zdGVkWm9uZUlkKGNvbnRleHQuc2NvcGUsIHRoaXMuaWQgPz8gYCR7dGhpcy5ob3N0ZWRab25lSWR9LUltcG9ydGAsIHRoaXMuaG9zdGVkWm9uZUlkKTtcclxuICAgIH1cclxuXHJcbn1cclxuXHJcblxyXG5leHBvcnQgaW50ZXJmYWNlIERlbGVnYXRpbmdIb3N0ZWRab25lUHJvdmlkZXJQcm9wcyB7XHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBQYXJlbnQgZG9tYWluIG5hbWUuXHJcbiAgICAgKi9cclxuICAgIHBhcmVudERvbWFpbjogc3RyaW5nLFxyXG4gICAgLyoqXHJcbiAgICAgKiBOYW1lIGZvciB0aGUgY2hpbGQgem9uZSAoZXhwZWN0ZWQgdG8gYmUgYSBzdWJkb21haW4gb2YgdGhlIHBhcmVudCBob3N0ZWQgem9uZSkuXHJcbiAgICAgKi9cclxuICAgIHN1YmRvbWFpbjogc3RyaW5nLFxyXG5cclxuICAgIC8qKlxyXG4gICAgICogQWNjb3VudCBJZCBmb3IgdGhlIHBhcmVudCBob3N0ZWQgem9uZS5cclxuICAgICAqL1xyXG4gICAgcGFyZW50RG5zQWNjb3VudElkOiBzdHJpbmcsXHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBSb2xlIG5hbWUgaW4gdGhlIHBhcmVudCBhY2NvdW50IGZvciBkZWxlZ2F0aW9uLiBNdXN0IGhhdmUgdHJ1c3QgcmVsYXRpb25zaGlwIHNldCB1cCB3aXRoIHRoZSB3b3JrbG9hZCBhY2NvdW50IHdoZXJlXHJcbiAgICAgKiB0aGUgRUtTIENsdXN0ZXIgQmx1ZXByaW50IGlzIHByb3Zpc2lvbmVkIChhY2NvdW50IGxldmVsIHRydXN0KS5cclxuICAgICAqL1xyXG4gICAgZGVsZWdhdGluZ1JvbGVOYW1lOiBzdHJpbmcsXHJcblxyXG4gICAgLyoqXHJcbiAgICAgKiBXaGVyZSBhIHdpbGQtY2FyZCBlbnRyeSBzaG91bGQgYmUgY3JlYXRlZCBmb3IgdGhlIHN1YmRvbWFpbi4gSW4gdGhpcyBjYXNlIGEgd2lsZGNhcmQgQ05BTUUgcmVjb3JkIGlzIGNyZWF0ZWQgYWxvbmcgd2l0aCB0aGUgc3ViZG9tYWluLlxyXG4gICAgICovXHJcbiAgICB3aWxkY2FyZFN1YmRvbWFpbj86IGJvb2xlYW5cclxufVxyXG5cclxuLyoqXHJcbiAqIERlbGVnYXRpbmcgcHJvdmlkZXIgaXMgYSBjb252ZW5pZW5jZSBhcHByb2FjaCB0byBoYXZlIGEgZ2xvYmFsIGhvc3RlZCB6b25lIHJlY29yZCBpbiBhIGNlbnRyYWxpemVkIFxyXG4gKiBhY2NvdW50IGFuZCBzdWJkb21haW4gcmVjb3JkcyBpbiByZXNwZWN0aXZlIHdvcmtsb2FkIGFjY291bnRzLiBcclxuICogXHJcbiAqIFRoZSBkZWxlZ2F0aW9uIHBhcnQgYWxsb3dzIHJvdXRpbmcgc3ViZG9tYWluIGVudHJpZXMgdG8gdGhlIGNoaWxkIGhvc3RlZCB6b25lIGluIHRoZSB3b3JrbG9hZCBhY2NvdW50LlxyXG4gKi9cclxuZXhwb3J0IGNsYXNzIERlbGVnYXRpbmdIb3N0ZWRab25lUHJvdmlkZXIgaW1wbGVtZW50cyBSZXNvdXJjZVByb3ZpZGVyPHI1My5JSG9zdGVkWm9uZT4ge1xyXG4gICAgY29uc3RydWN0b3IocHJpdmF0ZSBvcHRpb25zOiBEZWxlZ2F0aW5nSG9zdGVkWm9uZVByb3ZpZGVyUHJvcHMpIHsgfVxyXG5cclxuICAgIHByb3ZpZGUoY29udGV4dDogUmVzb3VyY2VDb250ZXh0KTogcjUzLklIb3N0ZWRab25lIHtcclxuICAgICAgICBjb25zdCBzdGFjayA9IFN0YWNrLm9mKGNvbnRleHQuc2NvcGUpO1xyXG5cclxuICAgICAgICBjb25zdCBzdWJab25lID0gbmV3IHI1My5QdWJsaWNIb3N0ZWRab25lKHN0YWNrLCBgJHt0aGlzLm9wdGlvbnMuc3ViZG9tYWlufS1TdWJab25lYCwge1xyXG4gICAgICAgICAgICB6b25lTmFtZTogdGhpcy5vcHRpb25zLnN1YmRvbWFpblxyXG4gICAgICAgIH0pO1xyXG5cclxuICAgICAgICBpZiAodGhpcy5vcHRpb25zLndpbGRjYXJkU3ViZG9tYWluKSB7XHJcbiAgICAgICAgICAgIG5ldyByNTMuQ25hbWVSZWNvcmQoc3RhY2ssIGAke3RoaXMub3B0aW9ucy5zdWJkb21haW59LWNuYW1lYCwge1xyXG4gICAgICAgICAgICAgICAgem9uZTogc3ViWm9uZSxcclxuICAgICAgICAgICAgICAgIGRvbWFpbk5hbWU6IGAke3RoaXMub3B0aW9ucy5zdWJkb21haW59YCxcclxuICAgICAgICAgICAgICAgIHJlY29yZE5hbWU6IGAqLiR7dGhpcy5vcHRpb25zLnN1YmRvbWFpbn1gXHJcbiAgICAgICAgICAgIH0pO1xyXG4gICAgICAgIH1cclxuXHJcbiAgICAgICAgLy8gXHJcbiAgICAgICAgLy8gaW1wb3J0IHRoZSBkZWxlZ2F0aW9uIHJvbGUgYnkgY29uc3RydWN0aW5nIHRoZSByb2xlQXJuLlxyXG4gICAgICAgIC8vIEFzc3VtaW5nIHRoZSBwYXJlbnQgYWNjb3VudCBoYXMgdGhlIGRlbGVnYXRpbmcgcm9sZSB3aXRoIFxyXG4gICAgICAgIC8vIHRydXN0IHJlbGF0aW9uc2hpcCBzZXR1cCB0byB0aGUgY2hpbGQgYWNjb3VudC5cclxuICAgICAgICAvL1xyXG4gICAgICAgIGNvbnN0IGRlbGVnYXRpb25Sb2xlQXJuID0gc3RhY2suZm9ybWF0QXJuKHtcclxuICAgICAgICAgICAgcmVnaW9uOiAnJywgLy8gSUFNIGlzIGdsb2JhbCBpbiBlYWNoIHBhcnRpdGlvblxyXG4gICAgICAgICAgICBzZXJ2aWNlOiAnaWFtJyxcclxuICAgICAgICAgICAgYWNjb3VudDogdGhpcy5vcHRpb25zLnBhcmVudERuc0FjY291bnRJZCxcclxuICAgICAgICAgICAgcmVzb3VyY2U6ICdyb2xlJyxcclxuICAgICAgICAgICAgcmVzb3VyY2VOYW1lOiB0aGlzLm9wdGlvbnMuZGVsZWdhdGluZ1JvbGVOYW1lXHJcbiAgICAgICAgfSk7XHJcblxyXG4gICAgICAgIGNvbnN0IGRlbGVnYXRpb25Sb2xlID0gUm9sZS5mcm9tUm9sZUFybihzdGFjaywgYCR7dGhpcy5vcHRpb25zLnN1YmRvbWFpbn0tRGVsZWdhdGlvblJvbGVgLCBkZWxlZ2F0aW9uUm9sZUFybik7XHJcblxyXG4gICAgICAgIC8vIGNyZWF0ZSB0aGUgcmVjb3JkXHJcbiAgICAgICAgbmV3IHI1My5Dcm9zc0FjY291bnRab25lRGVsZWdhdGlvblJlY29yZChzdGFjaywgYCR7dGhpcy5vcHRpb25zLnN1YmRvbWFpbn0tZGVsZWdhdGVgLCB7XHJcbiAgICAgICAgICAgIGRlbGVnYXRlZFpvbmU6IHN1YlpvbmUsXHJcbiAgICAgICAgICAgIHBhcmVudEhvc3RlZFpvbmVOYW1lOiB0aGlzLm9wdGlvbnMucGFyZW50RG9tYWluLCAvLyBvciB5b3UgY2FuIHVzZSBwYXJlbnRIb3N0ZWRab25lSWRcclxuICAgICAgICAgICAgZGVsZWdhdGlvblJvbGVcclxuICAgICAgICB9KTtcclxuXHJcbiAgICAgICAgcmV0dXJuIHN1YlpvbmU7XHJcbiAgICB9XHJcbn1cclxuIl19

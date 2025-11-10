@@ -1,0 +1,81 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LookupEfsFileSystemProvider = exports.CreateEfsFileSystemProvider = void 0;
+const aws_cdk_lib_1 = require("aws-cdk-lib");
+const ec2 = require("aws-cdk-lib/aws-ec2");
+const efs = require("aws-cdk-lib/aws-efs");
+const spi_1 = require("../spi");
+/**
+ * EFS resource provider.
+ *
+ * @param name The name of the EFS file system to create.
+ * @param efsProps The props used for the file system.
+ */
+class CreateEfsFileSystemProvider {
+    options;
+    constructor(options) {
+        this.options = options;
+    }
+    provide(context) {
+        const id = context.scope.node.id;
+        const securityGroupId = `${id}-${this.options.name ?? "default"}-EfsSecurityGroup`;
+        let efsFileSystem;
+        const vpc = context.get(spi_1.GlobalResources.Vpc);
+        if (vpc === undefined) {
+            throw new Error("VPC not found in context");
+        }
+        const clusterVpcCidr = vpc.vpcCidrBlock;
+        let kmsKey;
+        if (this.options.kmsKeyResourceName) {
+            kmsKey = context.get(this.options.kmsKeyResourceName);
+        }
+        const efsSG = new ec2.SecurityGroup(context.scope, securityGroupId, {
+            vpc,
+            securityGroupName: securityGroupId,
+        });
+        efsSG.addIngressRule(ec2.Peer.ipv4(clusterVpcCidr), new ec2.Port({
+            protocol: ec2.Protocol.TCP,
+            stringRepresentation: "EFSconnection",
+            toPort: 2049,
+            fromPort: 2049,
+        }));
+        efsFileSystem = new efs.FileSystem(context.scope, this.options.name || `${id}-EfsFileSystem`, {
+            vpc,
+            securityGroup: efsSG,
+            kmsKey,
+            ...this.options.efsProps,
+        });
+        new aws_cdk_lib_1.CfnOutput(context.scope, "EfsFileSystemId", {
+            value: efsFileSystem.fileSystemId,
+        });
+        return efsFileSystem;
+    }
+}
+exports.CreateEfsFileSystemProvider = CreateEfsFileSystemProvider;
+/**
+ * Pass an EFS file system name and id to lookup an existing EFS file system.
+ * @param name The name of the EFS file system to lookup an existing EFS file system.
+ * @param fileSystemId The id of the EFS file system to lookup an existing EFS file system.
+ */
+class LookupEfsFileSystemProvider {
+    options;
+    constructor(options) {
+        this.options = options;
+    }
+    provide(context) {
+        const id = context.scope.node.id;
+        const securityGroupId = `${id}-${this.options.name ?? "default"}-EfsSecurityGroup`;
+        let efsFileSystem;
+        const securityGroup = ec2.SecurityGroup.fromSecurityGroupId(context.scope, securityGroupId, securityGroupId);
+        efsFileSystem = efs.FileSystem.fromFileSystemAttributes(context.scope, this.options.name, {
+            securityGroup: securityGroup,
+            fileSystemId: this.options.fileSystemId,
+        });
+        new aws_cdk_lib_1.CfnOutput(context.scope, "EfsFileSystemId", {
+            value: efsFileSystem.fileSystemId,
+        });
+        return efsFileSystem;
+    }
+}
+exports.LookupEfsFileSystemProvider = LookupEfsFileSystemProvider;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZWZzLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiLi4vLi4vbGliL3Jlc291cmNlLXByb3ZpZGVycy9lZnMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7O0FBQUEsNkNBQXdDO0FBQ3hDLDJDQUEyQztBQUMzQywyQ0FBMkM7QUFFM0MsZ0NBQTRFO0FBYTVFOzs7OztHQUtHO0FBQ0gsTUFBYSwyQkFBMkI7SUFHN0IsT0FBTyxDQUEyQjtJQUUzQyxZQUFZLE9BQWlDO1FBQzNDLElBQUksQ0FBQyxPQUFPLEdBQUcsT0FBTyxDQUFDO0lBQ3pCLENBQUM7SUFFRCxPQUFPLENBQUMsT0FBd0I7UUFDOUIsTUFBTSxFQUFFLEdBQUcsT0FBTyxDQUFDLEtBQUssQ0FBQyxJQUFJLENBQUMsRUFBRSxDQUFDO1FBQ2pDLE1BQU0sZUFBZSxHQUFHLEdBQUcsRUFBRSxJQUMzQixJQUFJLENBQUMsT0FBTyxDQUFDLElBQUksSUFBSSxTQUN2QixtQkFBbUIsQ0FBQztRQUNwQixJQUFJLGFBQTBDLENBQUM7UUFDL0MsTUFBTSxHQUFHLEdBQUcsT0FBTyxDQUFDLEdBQUcsQ0FBQyxxQkFBZSxDQUFDLEdBQUcsQ0FBYSxDQUFDO1FBQ3pELElBQUksR0FBRyxLQUFLLFNBQVMsRUFBRSxDQUFDO1lBQ3RCLE1BQU0sSUFBSSxLQUFLLENBQUMsMEJBQTBCLENBQUMsQ0FBQztRQUM5QyxDQUFDO1FBQ0QsTUFBTSxjQUFjLEdBQUcsR0FBRyxDQUFDLFlBQVksQ0FBQztRQUN4QyxJQUFJLE1BQTRCLENBQUM7UUFDakMsSUFBSSxJQUFJLENBQUMsT0FBTyxDQUFDLGtCQUFrQixFQUFFLENBQUM7WUFDcEMsTUFBTSxHQUFHLE9BQU8sQ0FBQyxHQUFHLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxrQkFBa0IsQ0FBYSxDQUFDO1FBQ3BFLENBQUM7UUFFRCxNQUFNLEtBQUssR0FBRyxJQUFJLEdBQUcsQ0FBQyxhQUFhLENBQUMsT0FBTyxDQUFDLEtBQUssRUFBRSxlQUFlLEVBQUU7WUFDbEUsR0FBRztZQUNILGlCQUFpQixFQUFFLGVBQWU7U0FDbkMsQ0FBQyxDQUFDO1FBQ0gsS0FBSyxDQUFDLGNBQWMsQ0FDbEIsR0FBRyxDQUFDLElBQUksQ0FBQyxJQUFJLENBQUMsY0FBYyxDQUFDLEVBQzdCLElBQUksR0FBRyxDQUFDLElBQUksQ0FBQztZQUNYLFFBQVEsRUFBRSxHQUFHLENBQUMsUUFBUSxDQUFDLEdBQUc7WUFDMUIsb0JBQW9CLEVBQUUsZUFBZTtZQUNyQyxNQUFNLEVBQUUsSUFBSTtZQUNaLFFBQVEsRUFBRSxJQUFJO1NBQ2YsQ0FBQyxDQUNILENBQUM7UUFFRixhQUFhLEdBQUcsSUFBSSxHQUFHLENBQUMsVUFBVSxDQUNoQyxPQUFPLENBQUMsS0FBSyxFQUNiLElBQUksQ0FBQyxPQUFPLENBQUMsSUFBSSxJQUFJLEdBQUcsRUFBRSxnQkFBZ0IsRUFDMUM7WUFDRSxHQUFHO1lBQ0gsYUFBYSxFQUFFLEtBQUs7WUFDcEIsTUFBTTtZQUNOLEdBQUcsSUFBSSxDQUFDLE9BQU8sQ0FBQyxRQUFRO1NBQ3pCLENBQ0YsQ0FBQztRQUNGLElBQUksdUJBQVMsQ0FBQyxPQUFPLENBQUMsS0FBSyxFQUFFLGlCQUFpQixFQUFFO1lBQzlDLEtBQUssRUFBRSxhQUFhLENBQUMsWUFBWTtTQUNsQyxDQUFDLENBQUM7UUFDSCxPQUFPLGFBQWEsQ0FBQztJQUN2QixDQUFDO0NBQ0Y7QUF0REQsa0VBc0RDO0FBRUQ7Ozs7R0FJRztBQUNILE1BQWEsMkJBQTJCO0lBRzdCLE9BQU8sQ0FBMkI7SUFFM0MsWUFBWSxPQUFpQztRQUMzQyxJQUFJLENBQUMsT0FBTyxHQUFHLE9BQU8sQ0FBQztJQUN6QixDQUFDO0lBRUQsT0FBTyxDQUFDLE9BQXdCO1FBQzlCLE1BQU0sRUFBRSxHQUFHLE9BQU8sQ0FBQyxLQUFLLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQztRQUNqQyxNQUFNLGVBQWUsR0FBRyxHQUFHLEVBQUUsSUFDM0IsSUFBSSxDQUFDLE9BQU8sQ0FBQyxJQUFJLElBQUksU0FDdkIsbUJBQW1CLENBQUM7UUFDcEIsSUFBSSxhQUEwQyxDQUFDO1FBRS9DLE1BQU0sYUFBYSxHQUFHLEdBQUcsQ0FBQyxhQUFhLENBQUMsbUJBQW1CLENBQ3pELE9BQU8sQ0FBQyxLQUFLLEVBQ2IsZUFBZSxFQUNmLGVBQWUsQ0FDaEIsQ0FBQztRQUNGLGFBQWEsR0FBRyxHQUFHLENBQUMsVUFBVSxDQUFDLHdCQUF3QixDQUNyRCxPQUFPLENBQUMsS0FBSyxFQUNiLElBQUksQ0FBQyxPQUFPLENBQUMsSUFBSSxFQUNqQjtZQUNFLGFBQWEsRUFBRSxhQUFhO1lBQzVCLFlBQVksRUFBRSxJQUFJLENBQUMsT0FBTyxDQUFDLFlBQVk7U0FDeEMsQ0FDRixDQUFDO1FBRUYsSUFBSSx1QkFBUyxDQUFDLE9BQU8sQ0FBQyxLQUFLLEVBQUUsaUJBQWlCLEVBQUU7WUFDOUMsS0FBSyxFQUFFLGFBQWEsQ0FBQyxZQUFZO1NBQ2xDLENBQUMsQ0FBQztRQUNILE9BQU8sYUFBYSxDQUFDO0lBQ3ZCLENBQUM7Q0FDRjtBQW5DRCxrRUFtQ0MiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBDZm5PdXRwdXQgfSBmcm9tIFwiYXdzLWNkay1saWJcIjtcclxuaW1wb3J0ICogYXMgZWMyIGZyb20gXCJhd3MtY2RrLWxpYi9hd3MtZWMyXCI7XHJcbmltcG9ydCAqIGFzIGVmcyBmcm9tIFwiYXdzLWNkay1saWIvYXdzLWVmc1wiO1xyXG5pbXBvcnQgKiBhcyBrbXMgZnJvbSBcImF3cy1jZGstbGliL2F3cy1rbXNcIjtcclxuaW1wb3J0IHsgR2xvYmFsUmVzb3VyY2VzLCBSZXNvdXJjZUNvbnRleHQsIFJlc291cmNlUHJvdmlkZXIgfSBmcm9tIFwiLi4vc3BpXCI7XHJcblxyXG5leHBvcnQgaW50ZXJmYWNlIENyZWF0ZUVmc0ZpbGVTeXN0ZW1Qcm9wcyB7XHJcbiAgcmVhZG9ubHkgbmFtZT86IHN0cmluZztcclxuICByZWFkb25seSBlZnNQcm9wcz86IE9taXQ8ZWZzLkZpbGVTeXN0ZW1Qcm9wcywgXCJ2cGNcIiB8IFwia21zS2V5XCI+O1xyXG4gIHJlYWRvbmx5IGttc0tleVJlc291cmNlTmFtZT86IHN0cmluZztcclxufVxyXG5cclxuZXhwb3J0IGludGVyZmFjZSBMb29rdXBFZnNGaWxlU3lzdGVtUHJvcHMge1xyXG4gIHJlYWRvbmx5IG5hbWU6IHN0cmluZztcclxuICByZWFkb25seSBmaWxlU3lzdGVtSWQ6IHN0cmluZztcclxufVxyXG5cclxuLyoqXHJcbiAqIEVGUyByZXNvdXJjZSBwcm92aWRlci5cclxuICpcclxuICogQHBhcmFtIG5hbWUgVGhlIG5hbWUgb2YgdGhlIEVGUyBmaWxlIHN5c3RlbSB0byBjcmVhdGUuXHJcbiAqIEBwYXJhbSBlZnNQcm9wcyBUaGUgcHJvcHMgdXNlZCBmb3IgdGhlIGZpbGUgc3lzdGVtLlxyXG4gKi9cclxuZXhwb3J0IGNsYXNzIENyZWF0ZUVmc0ZpbGVTeXN0ZW1Qcm92aWRlclxyXG4gIGltcGxlbWVudHMgUmVzb3VyY2VQcm92aWRlcjxlZnMuSUZpbGVTeXN0ZW0+XHJcbntcclxuICByZWFkb25seSBvcHRpb25zOiBDcmVhdGVFZnNGaWxlU3lzdGVtUHJvcHM7XHJcblxyXG4gIGNvbnN0cnVjdG9yKG9wdGlvbnM6IENyZWF0ZUVmc0ZpbGVTeXN0ZW1Qcm9wcykge1xyXG4gICAgdGhpcy5vcHRpb25zID0gb3B0aW9ucztcclxuICB9XHJcblxyXG4gIHByb3ZpZGUoY29udGV4dDogUmVzb3VyY2VDb250ZXh0KTogZWZzLklGaWxlU3lzdGVtIHtcclxuICAgIGNvbnN0IGlkID0gY29udGV4dC5zY29wZS5ub2RlLmlkO1xyXG4gICAgY29uc3Qgc2VjdXJpdHlHcm91cElkID0gYCR7aWR9LSR7XHJcbiAgICAgIHRoaXMub3B0aW9ucy5uYW1lID8/IFwiZGVmYXVsdFwiXHJcbiAgICB9LUVmc1NlY3VyaXR5R3JvdXBgO1xyXG4gICAgbGV0IGVmc0ZpbGVTeXN0ZW06IGVmcy5JRmlsZVN5c3RlbSB8IHVuZGVmaW5lZDtcclxuICAgIGNvbnN0IHZwYyA9IGNvbnRleHQuZ2V0KEdsb2JhbFJlc291cmNlcy5WcGMpIGFzIGVjMi5JVnBjO1xyXG4gICAgaWYgKHZwYyA9PT0gdW5kZWZpbmVkKSB7XHJcbiAgICAgIHRocm93IG5ldyBFcnJvcihcIlZQQyBub3QgZm91bmQgaW4gY29udGV4dFwiKTtcclxuICAgIH1cclxuICAgIGNvbnN0IGNsdXN0ZXJWcGNDaWRyID0gdnBjLnZwY0NpZHJCbG9jaztcclxuICAgIGxldCBrbXNLZXk6IGttcy5JS2V5IHwgdW5kZWZpbmVkO1xyXG4gICAgaWYgKHRoaXMub3B0aW9ucy5rbXNLZXlSZXNvdXJjZU5hbWUpIHtcclxuICAgICAga21zS2V5ID0gY29udGV4dC5nZXQodGhpcy5vcHRpb25zLmttc0tleVJlc291cmNlTmFtZSkgYXMga21zLklLZXk7XHJcbiAgICB9XHJcblxyXG4gICAgY29uc3QgZWZzU0cgPSBuZXcgZWMyLlNlY3VyaXR5R3JvdXAoY29udGV4dC5zY29wZSwgc2VjdXJpdHlHcm91cElkLCB7XHJcbiAgICAgIHZwYyxcclxuICAgICAgc2VjdXJpdHlHcm91cE5hbWU6IHNlY3VyaXR5R3JvdXBJZCxcclxuICAgIH0pO1xyXG4gICAgZWZzU0cuYWRkSW5ncmVzc1J1bGUoXHJcbiAgICAgIGVjMi5QZWVyLmlwdjQoY2x1c3RlclZwY0NpZHIpLFxyXG4gICAgICBuZXcgZWMyLlBvcnQoe1xyXG4gICAgICAgIHByb3RvY29sOiBlYzIuUHJvdG9jb2wuVENQLFxyXG4gICAgICAgIHN0cmluZ1JlcHJlc2VudGF0aW9uOiBcIkVGU2Nvbm5lY3Rpb25cIixcclxuICAgICAgICB0b1BvcnQ6IDIwNDksXHJcbiAgICAgICAgZnJvbVBvcnQ6IDIwNDksXHJcbiAgICAgIH0pXHJcbiAgICApO1xyXG5cclxuICAgIGVmc0ZpbGVTeXN0ZW0gPSBuZXcgZWZzLkZpbGVTeXN0ZW0oXHJcbiAgICAgIGNvbnRleHQuc2NvcGUsXHJcbiAgICAgIHRoaXMub3B0aW9ucy5uYW1lIHx8IGAke2lkfS1FZnNGaWxlU3lzdGVtYCxcclxuICAgICAge1xyXG4gICAgICAgIHZwYyxcclxuICAgICAgICBzZWN1cml0eUdyb3VwOiBlZnNTRyxcclxuICAgICAgICBrbXNLZXksXHJcbiAgICAgICAgLi4udGhpcy5vcHRpb25zLmVmc1Byb3BzLFxyXG4gICAgICB9XHJcbiAgICApO1xyXG4gICAgbmV3IENmbk91dHB1dChjb250ZXh0LnNjb3BlLCBcIkVmc0ZpbGVTeXN0ZW1JZFwiLCB7XHJcbiAgICAgIHZhbHVlOiBlZnNGaWxlU3lzdGVtLmZpbGVTeXN0ZW1JZCxcclxuICAgIH0pO1xyXG4gICAgcmV0dXJuIGVmc0ZpbGVTeXN0ZW07XHJcbiAgfVxyXG59XHJcblxyXG4vKipcclxuICogUGFzcyBhbiBFRlMgZmlsZSBzeXN0ZW0gbmFtZSBhbmQgaWQgdG8gbG9va3VwIGFuIGV4aXN0aW5nIEVGUyBmaWxlIHN5c3RlbS5cclxuICogQHBhcmFtIG5hbWUgVGhlIG5hbWUgb2YgdGhlIEVGUyBmaWxlIHN5c3RlbSB0byBsb29rdXAgYW4gZXhpc3RpbmcgRUZTIGZpbGUgc3lzdGVtLlxyXG4gKiBAcGFyYW0gZmlsZVN5c3RlbUlkIFRoZSBpZCBvZiB0aGUgRUZTIGZpbGUgc3lzdGVtIHRvIGxvb2t1cCBhbiBleGlzdGluZyBFRlMgZmlsZSBzeXN0ZW0uXHJcbiAqL1xyXG5leHBvcnQgY2xhc3MgTG9va3VwRWZzRmlsZVN5c3RlbVByb3ZpZGVyXHJcbiAgaW1wbGVtZW50cyBSZXNvdXJjZVByb3ZpZGVyPGVmcy5JRmlsZVN5c3RlbT5cclxue1xyXG4gIHJlYWRvbmx5IG9wdGlvbnM6IExvb2t1cEVmc0ZpbGVTeXN0ZW1Qcm9wcztcclxuXHJcbiAgY29uc3RydWN0b3Iob3B0aW9uczogTG9va3VwRWZzRmlsZVN5c3RlbVByb3BzKSB7XHJcbiAgICB0aGlzLm9wdGlvbnMgPSBvcHRpb25zO1xyXG4gIH1cclxuXHJcbiAgcHJvdmlkZShjb250ZXh0OiBSZXNvdXJjZUNvbnRleHQpOiBlZnMuSUZpbGVTeXN0ZW0ge1xyXG4gICAgY29uc3QgaWQgPSBjb250ZXh0LnNjb3BlLm5vZGUuaWQ7XHJcbiAgICBjb25zdCBzZWN1cml0eUdyb3VwSWQgPSBgJHtpZH0tJHtcclxuICAgICAgdGhpcy5vcHRpb25zLm5hbWUgPz8gXCJkZWZhdWx0XCJcclxuICAgIH0tRWZzU2VjdXJpdHlHcm91cGA7XHJcbiAgICBsZXQgZWZzRmlsZVN5c3RlbTogZWZzLklGaWxlU3lzdGVtIHwgdW5kZWZpbmVkO1xyXG5cclxuICAgIGNvbnN0IHNlY3VyaXR5R3JvdXAgPSBlYzIuU2VjdXJpdHlHcm91cC5mcm9tU2VjdXJpdHlHcm91cElkKFxyXG4gICAgICBjb250ZXh0LnNjb3BlLFxyXG4gICAgICBzZWN1cml0eUdyb3VwSWQsXHJcbiAgICAgIHNlY3VyaXR5R3JvdXBJZFxyXG4gICAgKTtcclxuICAgIGVmc0ZpbGVTeXN0ZW0gPSBlZnMuRmlsZVN5c3RlbS5mcm9tRmlsZVN5c3RlbUF0dHJpYnV0ZXMoXHJcbiAgICAgIGNvbnRleHQuc2NvcGUsXHJcbiAgICAgIHRoaXMub3B0aW9ucy5uYW1lLFxyXG4gICAgICB7XHJcbiAgICAgICAgc2VjdXJpdHlHcm91cDogc2VjdXJpdHlHcm91cCxcclxuICAgICAgICBmaWxlU3lzdGVtSWQ6IHRoaXMub3B0aW9ucy5maWxlU3lzdGVtSWQsXHJcbiAgICAgIH1cclxuICAgICk7XHJcblxyXG4gICAgbmV3IENmbk91dHB1dChjb250ZXh0LnNjb3BlLCBcIkVmc0ZpbGVTeXN0ZW1JZFwiLCB7XHJcbiAgICAgIHZhbHVlOiBlZnNGaWxlU3lzdGVtLmZpbGVTeXN0ZW1JZCxcclxuICAgIH0pO1xyXG4gICAgcmV0dXJuIGVmc0ZpbGVTeXN0ZW07XHJcbiAgfVxyXG59XHJcbiJdfQ==
